@@ -521,6 +521,11 @@
         });
 
         // === INIT (must be after all data + handlers) ===
+        // One-time reset for broken localStorage from v1
+        if (!localStorage.getItem('schools-map-v2')) {
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.setItem('schools-map-v2', '1');
+        }
         loadFilters();
         updateAll();
         const allCoords = schools.map(s => [s.lat, s.lng]);
