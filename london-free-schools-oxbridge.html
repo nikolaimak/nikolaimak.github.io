@@ -17,7 +17,15 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.25);
             font-size: 12px;
             width: 260px;
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 1001;
+            cursor: grab;
+            user-select: none;
+            touch-action: none;
         }
+        .panel.dragging { cursor: grabbing; opacity: 0.9; }
         .panel-header {
             display: flex; justify-content: space-between; align-items: center;
             cursor: pointer; user-select: none; margin-bottom: 6px;
@@ -79,7 +87,6 @@
         @media (max-width: 600px) {
             #info-panel { width: calc(100vw - 20px); right: 10px; max-height: 70vh; }
             .panel { max-width: 200px; }
-            .leaflet-control-zoom { margin-top: 60px !important; }
         }
         #info-header {
             display: flex; justify-content: space-between; align-items: center;
@@ -102,6 +109,38 @@
     </style>
 </head>
 <body>
+    <div id="filter-panel" class="panel">
+        <div class="panel-header">
+            <h4>Filters</h4>
+            <button class="toggle-btn" id="collapse-btn">−</button>
+        </div>
+        <div class="panel-body">
+            <div class="filter-group">
+                <div class="filter-group-title">Gender</div>
+                <div class="btn-row">
+                    <button class="filter-btn active" data-group="gender" data-value="boys" style="--c:#4a90d9;--bg:#dbeafe;--tc:#1e40af;">Boys</button>
+                    <button class="filter-btn active" data-group="gender" data-value="girls" style="--c:#d946ef;--bg:#fae8ff;--tc:#86198f;">Girls</button>
+                    <button class="filter-btn active" data-group="gender" data-value="coed" style="--c:#059669;--bg:#d1fae5;--tc:#065f46;">Co-ed</button>
+                </div>
+            </div>
+            <div class="filter-group">
+                <div class="filter-group-title">School type</div>
+                <div class="btn-row">
+                    <button class="filter-btn active" data-group="type" data-value="grammar" style="--c:#2ecc40;--bg:#d5f5e3;--tc:#1e8449;">Grammar</button>
+                    <button class="filter-btn active" data-group="type" data-value="partial" style="--c:#ff851b;--bg:#fdebd0;--tc:#9c640c;">Semi-selective</button>
+                    <button class="filter-btn active" data-group="type" data-value="state" style="--c:#0074d9;--bg:#d6eaf8;--tc:#1a5276;">Non-selective</button>
+                    <button class="filter-btn active" data-group="type" data-value="independent" style="--c:#8e44ad;--bg:#f4ecf7;--tc:#6c3483;">Independent</button>
+                </div>
+            </div>
+            <div class="filter-group">
+                <div class="filter-group-title">Extra filters</div>
+                <div class="btn-row">
+                    <button class="filter-btn" id="f-top80" style="--c:#d35400;--bg:#fdebd0;--tc:#9c640c;">Top 80 only</button>
+                    <button class="filter-btn" id="f-free" style="--c:#27ae60;--bg:#d5f5e3;--tc:#1e8449;">Free only</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <div id="map"></div>
     <div id="info-panel">
         <div id="info-header">
@@ -111,10 +150,10 @@
         <div id="info-body">
             <h5>School types</h5>
             <ul>
-                <li><span class="info-color" style="background:#2ecc40"></span><strong>Grammar</strong> — fully selective state schools. Entry by <a href="https://en.wikipedia.org/wiki/Eleven-plus" target="_blank">11+ exam</a> only. Free. London has <a href="https://en.wikipedia.org/wiki/List_of_grammar_schools_in_England" target="_blank">19 per statute</a>, all shown.</li>
-                <li><span class="info-color" style="background:#0074d9"></span><strong>Non-selective (Top 80)</strong> — comprehensive schools that made the <a href="https://www.telegraph.co.uk/education-and-careers/2024/01/18/top-80-schools-oxbridge-offers/" target="_blank">Oxbridge Top 80 list</a>. Formally non-selective, but often use faith criteria, banding, or interviews that effectively select.</li>
-                <li><span class="info-color" style="background:#ff851b"></span><strong>Semi-selective</strong> — state schools that select 10–33% of intake by ability or aptitude. The rest admitted by distance/faith. Free. List based on <a href="https://en.wikipedia.org/wiki/Partially_selective_school_(England)" target="_blank">pre-1997 statutory arrangements</a> + <a href="https://www.gov.uk/government/publications/school-admissions-code--2" target="_blank">known aptitude selectors</a>.</li>
-                <li><span class="info-color" style="background:rgb(200,150,220)"></span><strong>Independent</strong> — private fee-paying schools (<a href="https://en.wikipedia.org/wiki/Independent_school_(United_Kingdom)" target="_blank">ISC members</a>). Colour intensity = fee level (£28k–£64k/year).</li>
+                <li><span class="info-color" style="background:#2ecc40"></span><strong>Grammar</strong> - fully selective state schools. Entry by <a href="https://en.wikipedia.org/wiki/Eleven-plus" target="_blank">11+ exam</a> only. Free. London has <a href="https://en.wikipedia.org/wiki/List_of_grammar_schools_in_England" target="_blank">19 per statute</a>, all shown.</li>
+                <li><span class="info-color" style="background:#0074d9"></span><strong>Non-selective (Top 80)</strong> - comprehensive schools that made the <a href="https://www.telegraph.co.uk/education-and-careers/2024/01/18/top-80-schools-oxbridge-offers/" target="_blank">Oxbridge Top 80 list</a>. Formally non-selective, but often use faith criteria, banding, or interviews that effectively select.</li>
+                <li><span class="info-color" style="background:#ff851b"></span><strong>Semi-selective</strong> - state schools that select 10-33% of intake by ability or aptitude. The rest admitted by distance/faith. Free. List based on <a href="https://en.wikipedia.org/wiki/Partially_selective_school_(England)" target="_blank">pre-1997 statutory arrangements</a> + <a href="https://www.gov.uk/government/publications/school-admissions-code--2" target="_blank">known aptitude selectors</a>.</li>
+                <li><span class="info-color" style="background:rgb(200,150,220)"></span><strong>Independent</strong> - private fee-paying schools (<a href="https://en.wikipedia.org/wiki/Independent_school_(United_Kingdom)" target="_blank">ISC members</a>). Colour intensity = fee level (£28k-£64k/year).</li>
             </ul>
 
             <h5>Oxbridge Top 80</h5>
@@ -123,7 +162,7 @@
             <h5>Completeness</h5>
             <ul>
                 <li><strong>Grammar:</strong> Complete - all 19 London grammar schools per <a href="https://www.legislation.gov.uk/uksi/1998/2219/contents/made" target="_blank">statutory designation</a>.</li>
-                <li><strong>Semi-selective:</strong> All from the <a href="https://en.wikipedia.org/wiki/Partially_selective_school_(England)" target="_blank">statutory list</a> (pre-1997 arrangements preserved by law) + well-known aptitude selectors. Not every academy with a 10% aptitude band is listed — there are dozens more.</li>
+                <li><strong>Semi-selective:</strong> All from the <a href="https://en.wikipedia.org/wiki/Partially_selective_school_(England)" target="_blank">statutory list</a> (pre-1997 arrangements preserved by law) + well-known aptitude selectors. Not every academy with a 10% aptitude band is listed - there are dozens more.</li>
                 <li><strong>Non-selective:</strong> Only those that made the Oxbridge Top 80.</li>
                 <li><strong>Independent:</strong> Only those in the Oxbridge Top 80. Many more exist.</li>
             </ul>
@@ -316,63 +355,46 @@
             } catch(e) {}
         }
 
-        // Panel
-        const panel = L.control({ position: 'topleft' });
-        panel.onAdd = function() {
-            const div = L.DomUtil.create('div', 'panel');
-            div.innerHTML = `
-                <div class="panel-header">
-                    <h4>Filters</h4>
-                    <button class="toggle-btn" id="collapse-btn">-</button>
-                </div>
-                <div class="panel-body">
-                    <div class="filter-group">
-                        <div class="filter-group-title">Gender</div>
-                        <div class="btn-row">
-                            <button class="filter-btn active" data-group="gender" data-value="boys" style="--c:#4a90d9;--bg:#dbeafe;--tc:#1e40af;">Boys</button>
-                            <button class="filter-btn active" data-group="gender" data-value="girls" style="--c:#d946ef;--bg:#fae8ff;--tc:#86198f;">Girls</button>
-                            <button class="filter-btn active" data-group="gender" data-value="coed" style="--c:#059669;--bg:#d1fae5;--tc:#065f46;">Co-ed</button>
-                        </div>
-                    </div>
-                    <div class="filter-group">
-                        <div class="filter-group-title">School type</div>
-                        <div class="btn-row">
-                            <button class="filter-btn active" data-group="type" data-value="grammar" style="--c:#2ecc40;--bg:#d5f5e3;--tc:#1e8449;">Grammar</button>
-                            <button class="filter-btn active" data-group="type" data-value="partial" style="--c:#ff851b;--bg:#fdebd0;--tc:#9c640c;">Semi-selective</button>
-                            <button class="filter-btn active" data-group="type" data-value="state" style="--c:#0074d9;--bg:#d6eaf8;--tc:#1a5276;">Non-selective</button>
-                            <button class="filter-btn active" data-group="type" data-value="independent" style="--c:#8e44ad;--bg:#f4ecf7;--tc:#6c3483;">Independent</button>
-                        </div>
-                    </div>
-                    <div class="filter-group">
-                        <div class="filter-group-title">Extra filters</div>
-                        <div class="btn-row">
-                            <button class="filter-btn" id="f-top80" style="--c:#d35400;--bg:#fdebd0;--tc:#9c640c;">Top 80 only</button>
-                            <button class="filter-btn" id="f-free" style="--c:#27ae60;--bg:#d5f5e3;--tc:#1e8449;">Free only</button>
-                        </div>
-                    </div>
-                </div>
-            `;
+        // Panel — standalone draggable div
+        const panelDiv = document.getElementById('filter-panel');
 
-            div.querySelector('#collapse-btn').addEventListener('click', () => {
-                div.classList.toggle('collapsed');
-                div.querySelector('#collapse-btn').textContent = div.classList.contains('collapsed') ? '+' : '-';
+        panelDiv.querySelector('#collapse-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            panelDiv.classList.toggle('collapsed');
+            panelDiv.querySelector('#collapse-btn').textContent = panelDiv.classList.contains('collapsed') ? '+' : '−';
+        });
+
+        panelDiv.querySelectorAll('.filter-btn[data-group]').forEach(btn => {
+            btn.addEventListener('click', () => { btn.classList.toggle('active'); updateAll(); });
+        });
+
+        ['f-top80', 'f-free'].forEach(id => {
+            panelDiv.querySelector('#' + id).addEventListener('click', function() {
+                this.classList.toggle('active'); updateAll();
             });
+        });
 
-            div.querySelectorAll('.filter-btn[data-group]').forEach(btn => {
-                btn.addEventListener('click', () => { btn.classList.toggle('active'); updateAll(); });
-            });
-
-            ['f-top80', 'f-free'].forEach(id => {
-                div.querySelector('#' + id).addEventListener('click', function() {
-                    this.classList.toggle('active'); updateAll();
-                });
-            });
-
-            L.DomEvent.disableClickPropagation(div);
-            L.DomEvent.disableScrollPropagation(div);
-            return div;
-        };
-        panel.addTo(map);
+        // Drag logic (pointer events, works on touch + mouse)
+        let isDragging = false, dragOffsetX = 0, dragOffsetY = 0;
+        panelDiv.querySelector('.panel-header').addEventListener('pointerdown', (e) => {
+            if (e.target.closest('.toggle-btn')) return;
+            isDragging = true;
+            dragOffsetX = e.clientX - panelDiv.offsetLeft;
+            dragOffsetY = e.clientY - panelDiv.offsetTop;
+            panelDiv.classList.add('dragging');
+            panelDiv.setPointerCapture(e.pointerId);
+        });
+        panelDiv.addEventListener('pointermove', (e) => {
+            if (!isDragging) return;
+            const x = Math.max(0, Math.min(window.innerWidth - 50, e.clientX - dragOffsetX));
+            const y = Math.max(0, Math.min(window.innerHeight - 50, e.clientY - dragOffsetY));
+            panelDiv.style.left = x + 'px';
+            panelDiv.style.top = y + 'px';
+        });
+        panelDiv.addEventListener('pointerup', () => {
+            isDragging = false;
+            panelDiv.classList.remove('dragging');
+        });
 
         // Info panel toggle
         document.getElementById('info-header').addEventListener('click', () => {
