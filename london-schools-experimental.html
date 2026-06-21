@@ -445,14 +445,6 @@
             document.getElementById('info-toggle').textContent = panel.classList.contains('open') ? '-' : '+';
         });
 
-        // Load saved filter state
-        loadFilters();
-
-        // Initial render
-        updateAll();
-        const allCoords = schools.map(s => [s.lat, s.lng]);
-        map.fitBounds(allCoords, { padding: [30, 30] });
-
         // === LAYER DATA ===
         const boroughPrices = {"E09000002":330000,"E09000003":575000,"E09000004":368000,"E09000005":455000,"E09000006":470000,"E09000007":800000,"E09000001":650000,"E09000008":370000,"E09000009":500000,"E09000010":405000,"E09000011":390000,"E09000012":580000,"E09000013":720000,"E09000014":525000,"E09000015":470000,"E09000016":375000,"E09000017":400000,"E09000018":430000,"E09000019":700000,"E09000020":1100000,"E09000021":525000,"E09000022":525000,"E09000023":410000,"E09000024":510000,"E09000025":380000,"E09000026":425000,"E09000027":700000,"E09000028":525000,"E09000029":400000,"E09000030":480000,"E09000031":430000,"E09000032":620000,"E09000033":875000};
         const schoolCommute = {"Westminster School":13,"London Nautical School":14,"City of London School":15,"UCS Hampstead":16,"Grey Coat Hospital":16,"Camden School for Girls":17,"Mossbourne Community Academy":19,"Twyford CofE High School":19,"Archbishop Tenison's School":23,"Henrietta Barnett School":24,"The London Oratory School":24,"St Paul's Girls' School":25,"Highgate School":25,"Latymer Upper School":25,"Lady Margaret School":25,"St Paul's School":26,"St Michael's Catholic Grammar":30,"Burntwood School":31,"Chestnut Grove School":31,"Ernest Bevin Academy":31,"NLCS":32,"Harrow School":32,"Dunraven School":32,"Prendergast Ladywell School":33,"Dulwich College":34,"James Allen's Girls' School":34,"Alleyn's School":34,"King's College School":35,"Graveney School":35,"Kingsdale Foundation School":35,"Mill Hill County High School":35,"Queen Elizabeth's School, Barnet":38,"Haberdashers' Boys' School":38,"The Latymer School":39,"Orchard Park High":40,"Tiffin School":42,"Shirley High School":42,"The Tiffin Girls' School":43,"Archbishop Lanfranc Academy":43,"Dame Alice Owen's School":45,"Woodford County High School":45,"Chislehurst and Sidcup Grammar":45,"Bexley Grammar School":46,"Ilford County High School":46,"Hampton School":47,"St Olave's Grammar School":48,"Sutton Grammar School":48,"Greenshaw High School":48,"Wilson's School":49,"Townley Grammar School":49,"Wallington County Grammar School":49,"Trinity School, Croydon":50,"Nonsuch High School for Girls":50,"Newstead Wood School":51,"Wallington High School for Girls":51,"Beths Grammar School":51,"Riddlesdown Collegiate":57};
@@ -528,7 +520,12 @@
             saveFilters();
         });
 
-        // Restore layer state
+        // === INIT (must be after all data + handlers) ===
+        loadFilters();
+        updateAll();
+        const allCoords = schools.map(s => [s.lat, s.lng]);
+        map.fitBounds(allCoords, { padding: [30, 30] });
+        // Restore layers after loadFilters set button states
         if (document.getElementById('f-prices').classList.contains('active')) { showPriceLayer(); document.getElementById('price-legend').style.display = ''; }
         if (document.getElementById('f-commute').classList.contains('active')) { showCommuteLayer(); document.getElementById('commute-legend').style.display = ''; }
     </script>
