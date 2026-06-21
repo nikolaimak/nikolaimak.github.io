@@ -48,8 +48,6 @@
             z-index: 1000;
             border-top: 1px solid #ddd;
             box-shadow: 0 -1px 4px rgba(0,0,0,0.1);
-            max-height: 90px;
-            overflow-y: auto;
         }
         .legend-row {
             display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center;
@@ -59,26 +57,7 @@
         }
         .legend-item { display: flex; align-items: center; gap: 3px; white-space: nowrap; }
         .legend-dot { width: 8px; height: 8px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.2); flex-shrink: 0; }
-        #school-list {
-            display: flex; flex-wrap: wrap; gap: 2px 10px;
-            padding: 3px 12px 5px;
-            font-size: 10px;
-        }
-        .school-item {
-            display: flex; align-items: center; gap: 3px;
-            white-space: nowrap; color: #444;
-            cursor: pointer;
-            padding: 1px 2px;
-            border-radius: 3px;
-            transition: background 0.1s;
-        }
-        .school-item:hover { background: #f0f0f0; }
-        .school-dot {
-            width: 7px; height: 7px; border-radius: 50%;
-            flex-shrink: 0; border: 1px solid rgba(0,0,0,0.2);
-        }
-        .school-item.top80 { font-weight: 600; }
-        .school-count { font-size: 9px; color: #aaa; margin-right: 4px; }
+        .school-count { font-size: 9px; color: #aaa; padding: 4px 12px; }
 
         .popup-content h3 { font-size: 14px; margin-bottom: 4px; color: #222; }
         .popup-content p { font-size: 12px; margin: 2px 0; color: #555; }
@@ -126,16 +105,16 @@
     <div id="map"></div>
     <div id="info-panel">
         <div id="info-header">
-            <h4>ℹ️ About the data</h4>
+            <h4>i️ About the data</h4>
             <button id="info-toggle">+</button>
         </div>
         <div id="info-body">
             <h5>School types</h5>
             <ul>
-                <li><span class="info-color" style="background:#2ecc40"></span><strong>Grammar</strong> — fully selective state schools. Entry by 11+ exam only. Free. London has <a href="https://en.wikipedia.org/wiki/List_of_grammar_schools_in_England" target="_blank">19 per statute</a>, all shown.</li>
-                <li><span class="info-color" style="background:#0074d9"></span><strong>Non-selective (Top 80)</strong> — comprehensive schools that made the Oxbridge Top 80 list. Formally non-selective, but often use faith criteria, banding, or interviews that effectively select.</li>
-                <li><span class="info-color" style="background:#ff851b"></span><strong>Semi-selective</strong> — state schools that select 10–33% of intake by ability or aptitude. The rest admitted by distance/faith. Free. List based on <a href="https://en.wikipedia.org/wiki/Partially_selective_school_(England)" target="_blank">pre-1997 statutory arrangements</a> + known aptitude selectors.</li>
-                <li><span class="info-color" style="background:rgb(200,150,220)"></span><strong>Independent</strong> — private fee-paying schools. Colour intensity = fee level (£28k–£64k/year).</li>
+                <li><span class="info-color" style="background:#2ecc40"></span><strong>Grammar</strong> - fully selective state schools. Entry by 11+ exam only. Free. London has <a href="https://en.wikipedia.org/wiki/List_of_grammar_schools_in_England" target="_blank">19 per statute</a>, all shown.</li>
+                <li><span class="info-color" style="background:#0074d9"></span><strong>Non-selective (Top 80)</strong> - comprehensive schools that made the Oxbridge Top 80 list. Formally non-selective, but often use faith criteria, banding, or interviews that effectively select.</li>
+                <li><span class="info-color" style="background:#ff851b"></span><strong>Semi-selective</strong> - state schools that select 10-33% of intake by ability or aptitude. The rest admitted by distance/faith. Free. List based on <a href="https://en.wikipedia.org/wiki/Partially_selective_school_(England)" target="_blank">pre-1997 statutory arrangements</a> + known aptitude selectors.</li>
+                <li><span class="info-color" style="background:rgb(200,150,220)"></span><strong>Independent</strong> - private fee-paying schools. Colour intensity = fee level (£28k-£64k/year).</li>
             </ul>
 
             <h5>Oxbridge Top 80</h5>
@@ -143,18 +122,19 @@
 
             <h5>Completeness</h5>
             <ul>
-                <li><strong>Grammar:</strong> Complete — all 19 London grammar schools per <a href="https://www.legislation.gov.uk/uksi/1998/2219/contents/made" target="_blank">statutory designation</a>.</li>
-                <li><strong>Semi-selective:</strong> All from the statutory list (pre-1997 arrangements preserved by law) + well-known aptitude selectors. Not every academy with a 10% aptitude band is listed — there are dozens more.</li>
+                <li><strong>Grammar:</strong> Complete - all 19 London grammar schools per <a href="https://www.legislation.gov.uk/uksi/1998/2219/contents/made" target="_blank">statutory designation</a>.</li>
+                <li><strong>Semi-selective:</strong> All from the statutory list (pre-1997 arrangements preserved by law) + well-known aptitude selectors. Not every academy with a 10% aptitude band is listed - there are dozens more.</li>
                 <li><strong>Non-selective:</strong> Only those that made the Oxbridge Top 80.</li>
                 <li><strong>Independent:</strong> Only those in the Oxbridge Top 80. Many more exist.</li>
             </ul>
 
             <h5>Entry points</h5>
-            <p>11+ = Year 7 entry (age 10–11). 13+ = Year 9 entry. 16+ = Sixth Form entry. Some single-sex schools open to both genders at 16+.</p>
+            <p>11+ = Year 7 entry (age 10-11). 13+ = Year 9 entry. 16+ = Sixth Form entry. Some single-sex schools open to both genders at 16+.</p>
         </div>
     </div>
     <div id="bottom-panel">
         <div class="legend-row">
+            <span class="school-count" id="school-count"></span>
             <span class="legend-item"><span class="legend-dot" style="background:#2ecc40"></span>Grammar (T80)</span>
             <span class="legend-item"><span class="legend-dot" style="background:#a3d977"></span>Grammar</span>
             <span class="legend-item"><span class="legend-dot" style="background:#ff851b"></span>Semi-sel. (T80)</span>
@@ -163,7 +143,6 @@
             <span class="legend-item"><span class="legend-dot" style="background:rgb(200,150,220)"></span>Independent <span style="color:rgb(200,150,220)">£28k</span>–<span style="color:rgb(120,30,180)">£64k</span></span>
             <span class="legend-item" style="color:#aaa">● larger = Top 80</span>
         </div>
-        <div id="school-list"></div>
     </div>
     <script>
         const map = L.map('map').setView([51.48, -0.10], 11);
@@ -230,8 +209,8 @@
             { name: "Dunraven School", type: "partial", gender: "coed", top80: false, free: true, entry: "11+", lat: 51.441, lng: -0.119, note: "10% performing arts" },
             { name: "Prendergast Ladywell School", type: "partial", gender: "girls", top80: false, free: true, entry: "11+", lat: 51.458, lng: -0.021, note: "10% music aptitude" },
             { name: "Lady Margaret School", type: "partial", gender: "girls", top80: false, free: true, entry: "11+", lat: 51.483, lng: -0.210, note: "10% music aptitude, CofE" },
-            // === PARTIALLY-SELECTIVE — STATUTORY (pre-1997, Wikipedia verified) ===
-            { name: "Ernest Bevin Academy", type: "partial", gender: "boys", top80: false, free: true, entry: "11+", lat: 51.438, lng: -0.168, note: "⅓ general ability, co-ed 6th" },
+            // === PARTIALLY-SELECTIVE - STATUTORY (pre-1997, Wikipedia verified) ===
+            { name: "Ernest Bevin Academy", type: "partial", gender: "boys", top80: false, free: true, entry: "11+", lat: 51.438, lng: -0.168, note: "1⁄3 general ability, co-ed 6th" },
             { name: "Archbishop Lanfranc Academy", type: "partial", gender: "coed", top80: false, free: true, entry: "11+", lat: 51.391, lng: -0.130, note: "15% general ability" },
             { name: "London Nautical School", type: "partial", gender: "boys", top80: false, free: true, entry: "11+", lat: 51.507, lng: -0.108, note: "Nautical/sport aptitude" },
             { name: "Shirley High School", type: "partial", gender: "coed", top80: false, free: true, entry: "11+", lat: 51.370, lng: -0.049, note: "15% general ability" },
@@ -256,7 +235,7 @@
             return '#999';
         }
 
-        // Marker storage — index → marker
+        // Marker storage - index → marker
         let markerMap = {};
         let markers = [];
 
@@ -280,6 +259,7 @@
             markerMap = {};
 
             const visible = getVisibleSchools();
+            document.getElementById('school-count').textContent = visible.length + ' schools';
             visible.forEach(s => {
                 const color = getColor(s);
                 const radius = s.top80 ? 11 : 9;
@@ -290,7 +270,7 @@
                 let html = `<div class="popup-content"><h3>${s.name}</h3>
                     <p><strong>Type:</strong> ${s.type}${s.note ? ' · ' + s.note : ''}</p>
                     <p><strong>Gender:</strong> ${s.gender}</p>`;
-                if (s.rank) html += `<p class="oxbridge">Oxbridge Top 80: #${s.rank} — ${s.offers} offers (${s.pct})</p>`;
+                if (s.rank) html += `<p class="oxbridge">Oxbridge Top 80: #${s.rank} - ${s.offers} offers (${s.pct})</p>`;
                 if (s.fee) html += `<p class="fee">£${s.fee.toLocaleString()}/year</p>`;
                 if (s.entry) html += `<p class="entry">Entry: ${s.entry}</p>`;
                 html += `</div>`;
@@ -300,48 +280,40 @@
             });
         }
 
-        function renderSchoolList() {
-            const container = document.getElementById('school-list');
-            const visible = getVisibleSchools();
-            // Sort: top80 first (by rank), then non-top80 alphabetically
-            visible.sort((a, b) => {
-                if (a.top80 && !b.top80) return -1;
-                if (!a.top80 && b.top80) return 1;
-                if (a.top80 && b.top80) return (a.rank || 999) - (b.rank || 999);
-                return a.name.localeCompare(b.name);
-            });
-
-            container.innerHTML = `<span class="school-count">${visible.length} schools</span>`;
-            visible.forEach(s => {
-                const item = document.createElement('span');
-                item.className = 'school-item' + (s.top80 ? ' top80' : '');
-                const dot = document.createElement('span');
-                dot.className = 'school-dot';
-                dot.style.background = getColor(s);
-                item.appendChild(dot);
-                // Short name
-                let label = s.name
-                    .replace(' School', '').replace(' Grammar', ' Gr.')
-                    .replace(' High School', '').replace(' for Girls', ' ♀')
-                    .replace(' for Boys', ' ♂').replace(', Croydon', '');
-                if (label.length > 28) label = label.substring(0, 26) + '…';
-                item.appendChild(document.createTextNode(label));
-                item.title = s.name + (s.rank ? ` (#${s.rank})` : '') + (s.fee ? ` £${s.fee.toLocaleString()}/yr` : '');
-                item.addEventListener('click', () => {
-                    const m = markerMap[s._idx];
-                    if (m) { map.setView([s.lat, s.lng], 14); m.openPopup(); }
-                });
-                container.appendChild(item);
-            });
-        }
-
         function updateAll() {
             renderMarkers();
-            renderSchoolList();
+            saveFilters();
         }
 
         function getActiveFilters(group) {
             return [...document.querySelectorAll(`.filter-btn[data-group="${group}"].active`)].map(b => b.dataset.value);
+        }
+
+        // localStorage persistence
+        const STORAGE_KEY = 'london-schools-filters';
+        function saveFilters() {
+            const state = {
+                gender: getActiveFilters('gender'),
+                type: getActiveFilters('type'),
+                top80: document.getElementById('f-top80').classList.contains('active'),
+                free: document.getElementById('f-free').classList.contains('active')
+            };
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+        }
+        function loadFilters() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return;
+                const state = JSON.parse(raw);
+                document.querySelectorAll('.filter-btn[data-group]').forEach(btn => {
+                    const vals = state[btn.dataset.group] || [];
+                    btn.classList.toggle('active', vals.includes(btn.dataset.value));
+                });
+                if (state.top80) document.getElementById('f-top80').classList.add('active');
+                else document.getElementById('f-top80').classList.remove('active');
+                if (state.free) document.getElementById('f-free').classList.add('active');
+                else document.getElementById('f-free').classList.remove('active');
+            } catch(e) {}
         }
 
         // Panel
@@ -351,7 +323,7 @@
             div.innerHTML = `
                 <div class="panel-header">
                     <h4>Filters</h4>
-                    <button class="toggle-btn" id="collapse-btn">−</button>
+                    <button class="toggle-btn" id="collapse-btn">-</button>
                 </div>
                 <div class="panel-body">
                     <p class="panel-note">Selective schools in London. Grammar: all 19 per Statutory Instrument. Partial: all from Wikipedia's verified statutory list + known aptitude selectors. Independent: Oxbridge Top 80.</p>
@@ -384,7 +356,7 @@
 
             div.querySelector('#collapse-btn').addEventListener('click', () => {
                 div.classList.toggle('collapsed');
-                div.querySelector('#collapse-btn').textContent = div.classList.contains('collapsed') ? '+' : '−';
+                div.querySelector('#collapse-btn').textContent = div.classList.contains('collapsed') ? '+' : '-';
             });
 
             div.querySelectorAll('.filter-btn[data-group]').forEach(btn => {
@@ -407,8 +379,11 @@
         document.getElementById('info-header').addEventListener('click', () => {
             const panel = document.getElementById('info-panel');
             panel.classList.toggle('open');
-            document.getElementById('info-toggle').textContent = panel.classList.contains('open') ? '−' : '+';
+            document.getElementById('info-toggle').textContent = panel.classList.contains('open') ? '-' : '+';
         });
+
+        // Load saved filter state
+        loadFilters();
 
         // Initial render
         updateAll();
