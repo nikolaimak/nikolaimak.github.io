@@ -17,7 +17,7 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
             font-size: 13px;
             line-height: 1.8;
-            max-width: 260px;
+            max-width: 280px;
         }
         .legend h4 { margin-bottom: 6px; font-size: 14px; color: #333; }
         .legend-item { display: flex; align-items: center; gap: 8px; }
@@ -28,36 +28,49 @@
         .popup-content p { font-size: 12px; margin: 2px 0; color: #555; }
         .popup-content .rank { font-weight: 600; color: #333; }
         .popup-content .fee { font-weight: 600; color: #8e44ad; }
+        .popup-content .entry { color: #2980b9; font-style: italic; }
     </style>
 </head>
 <body>
     <div id="map"></div>
     <script>
-        const map = L.map('map').setView([51.50, -0.12], 10.5);
+        const map = L.map('map').setView([51.50, -0.10], 11);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
             maxZoom: 18
         }).addTo(map);
 
-        function createMarker(lat, lng, color, school, radius) {
-            const marker = L.circleMarker([lat, lng], {
-                radius: radius || 10,
-                fillColor: color,
-                color: '#333',
-                weight: 2,
-                opacity: 0.9,
-                fillOpacity: 0.85
-            }).addTo(map);
+        function createMarker(lat, lng, color, school, radius, shape) {
+            let marker;
+            if (shape === 'square') {
+                const size = radius * 2;
+                const icon = L.divIcon({
+                    className: '',
+                    html: `<div style="width:${size}px;height:${size}px;background:${color};border:2px solid #333;border-radius:3px;opacity:0.85;"></div>`,
+                    iconSize: [size, size],
+                    iconAnchor: [size/2, size/2]
+                });
+                marker = L.marker([lat, lng], { icon }).addTo(map);
+            } else {
+                marker = L.circleMarker([lat, lng], {
+                    radius: radius || 10,
+                    fillColor: color,
+                    color: '#333',
+                    weight: 2,
+                    opacity: 0.9,
+                    fillOpacity: 0.85
+                }).addTo(map);
+            }
             let popupHtml = `<div class="popup-content"><h3>${school.name}</h3>
                 <p><strong>Type:</strong> ${school.type}${school.gender ? ' · ' + school.gender : ''}</p>
                 <p class="rank">Rank #${school.rank} — ${school.offers} offers (${school.pct})</p>`;
             if (school.fee) popupHtml += `<p class="fee">£${school.fee.toLocaleString()}/year</p>`;
+            if (school.entry) popupHtml += `<p class="entry">Entry: ${school.entry}</p>`;
             popupHtml += `</div>`;
             marker.bindPopup(popupHtml);
             return marker;
         }
 
-        // Fee gradient: light purple (cheapest) → dark purple (most expensive)
         function feeColor(fee) {
             const minFee = 30000, maxFee = 47000;
             const t = Math.min(1, Math.max(0, (fee - minFee) / (maxFee - minFee)));
@@ -67,42 +80,52 @@
             return `rgb(${r},${g},${b})`;
         }
 
+        // FREE: Grammar & State (girls / co-ed)
         const freeSchools = [
-            // Co-ed & girls grammar/state (boys-only removed)
-            { name: "St Olave's Grammar School", type: "Grammar", gender: "Co-ed 6th form", rank: 15, offers: 39, pct: "35%", lat: 51.3764, lng: 0.0471, color: '#2ecc40' },
-            { name: "Henrietta Barnett School", type: "Grammar", gender: "Girls", rank: 18, offers: 34, pct: "43%", lat: 51.5792, lng: -0.1870, color: '#2ecc40' },
-            { name: "Camden School for Girls", type: "State", gender: "Girls (co-ed 6th)", rank: 20, offers: 31, pct: "41%", lat: 51.5559, lng: -0.1427, color: '#0074d9' },
-            { name: "The Tiffin Girls' School", type: "Grammar", gender: "Girls", rank: 48, offers: 21, pct: "31%", lat: 51.4103, lng: -0.2985, color: '#2ecc40' },
-            { name: "Dame Alice Owen's School", type: "Partially-selective", gender: "Co-ed", rank: 49, offers: 21, pct: "26%", lat: 51.6940, lng: -0.1720, color: '#ff851b' },
-            { name: "Mossbourne Community Academy", type: "State", gender: "Co-ed", rank: 52, offers: 20, pct: "43%", lat: 51.5494, lng: -0.0558, color: '#0074d9' },
-            { name: "The Latymer School", type: "Grammar", gender: "Co-ed", rank: 54, offers: 20, pct: "27%", lat: 51.6170, lng: -0.0600, color: '#2ecc40' },
-            { name: "St Michael's Catholic Grammar", type: "Grammar", gender: "Girls", rank: 73, offers: 14, pct: "34%", lat: 51.6130, lng: -0.1760, color: '#2ecc40' },
-            { name: "Twyford CofE High School", type: "State", gender: "Co-ed", rank: 74, offers: 14, pct: "30%", lat: 51.5130, lng: -0.2680, color: '#0074d9' },
+            { name: "St Olave's Grammar School", type: "Grammar", gender: "Boys (co-ed 6th)", entry: "11+, 16+ (girls)", rank: 15, offers: 39, pct: "35%", lat: 51.3764, lng: 0.0471, color: '#2ecc40' },
+            { name: "Henrietta Barnett School", type: "Grammar", gender: "Girls", entry: "11+", rank: 18, offers: 34, pct: "43%", lat: 51.5792, lng: -0.1870, color: '#2ecc40' },
+            { name: "Camden School for Girls", type: "State", gender: "Girls (co-ed 6th)", entry: "11+, 16+", rank: 20, offers: 31, pct: "41%", lat: 51.5559, lng: -0.1427, color: '#0074d9' },
+            { name: "The Tiffin Girls' School", type: "Grammar", gender: "Girls", entry: "11+", rank: 48, offers: 21, pct: "31%", lat: 51.4103, lng: -0.2985, color: '#2ecc40' },
+            { name: "Dame Alice Owen's School", type: "Partially-selective", gender: "Co-ed", entry: "11+, 16+", rank: 49, offers: 21, pct: "26%", lat: 51.6940, lng: -0.1720, color: '#ff851b' },
+            { name: "Mossbourne Community Academy", type: "State", gender: "Co-ed", entry: "11+, 16+", rank: 52, offers: 20, pct: "43%", lat: 51.5494, lng: -0.0558, color: '#0074d9' },
+            { name: "The Latymer School", type: "Grammar", gender: "Co-ed", entry: "11+", rank: 54, offers: 20, pct: "27%", lat: 51.6170, lng: -0.0600, color: '#2ecc40' },
+            { name: "St Michael's Catholic Grammar", type: "Grammar", gender: "Girls", entry: "11+", rank: 73, offers: 14, pct: "34%", lat: 51.6130, lng: -0.1760, color: '#2ecc40' },
+            { name: "Twyford CofE High School", type: "State", gender: "Co-ed", entry: "11+", rank: 74, offers: 14, pct: "30%", lat: 51.5130, lng: -0.2680, color: '#0074d9' },
         ];
 
+        // FREE: Sixth-form colleges (16+ only, all co-ed)
+        const sixthFormSchools = [
+            { name: "Brampton Manor Academy", type: "Sixth-form", gender: "Co-ed", entry: "16+", rank: 6, offers: 50, pct: "18%", lat: 51.5240, lng: 0.0470, color: '#e056fd' },
+            { name: "Harris Westminster Sixth Form", type: "Sixth-form", gender: "Co-ed", entry: "16+", rank: 7, offers: 49, pct: "31%", lat: 51.4975, lng: -0.1290, color: '#e056fd' },
+            { name: "Newham Collegiate Sixth Form", type: "Sixth-form", gender: "Co-ed", entry: "16+", rank: 14, offers: 40, pct: "29%", lat: 51.5300, lng: 0.0340, color: '#e056fd' },
+            { name: "King's Maths School", type: "Sixth-form", gender: "Co-ed", entry: "16+", rank: 21, offers: 30, pct: "43%", lat: 51.5115, lng: -0.1160, color: '#e056fd' },
+            { name: "Woodhouse College", type: "Sixth-form", gender: "Co-ed", entry: "16+", rank: 32, offers: 25, pct: "23%", lat: 51.5920, lng: -0.1530, color: '#e056fd' },
+            { name: "London Academy of Excellence", type: "Sixth-form", gender: "Co-ed", entry: "16+", rank: 38, offers: 23, pct: "25%", lat: 51.5310, lng: 0.0090, color: '#e056fd' },
+        ];
+
+        // PAID: Independent (girls / co-ed / becoming co-ed)
         const paidSchools = [
-            // Independent — girls & co-ed only (boys-only removed)
-            { name: "James Allen's Girls' School", type: "Independent", gender: "Girls", rank: 45, offers: 21, pct: "43%", fee: 30438, lat: 51.4448, lng: -0.0740 },
-            { name: "Trinity School, Croydon", type: "Independent", gender: "Co-ed", rank: 69, offers: 15, pct: "33%", fee: 30468, lat: 51.3650, lng: -0.0830 },
-            { name: "NLCS", type: "Independent", gender: "Girls", rank: 42, offers: 22, pct: "28%", fee: 31095, lat: 51.6110, lng: -0.2670 },
-            { name: "Latymer Upper School", type: "Independent", gender: "Co-ed", rank: 31, offers: 25, pct: "28%", fee: 32025, lat: 51.4930, lng: -0.2350 },
-            { name: "Dulwich College", type: "Independent", gender: "Boys (co-ed 6th)", rank: 37, offers: 23, pct: "27%", fee: 32118, lat: 51.4410, lng: -0.0850 },
-            { name: "Alleyn's School", type: "Independent", gender: "Co-ed", rank: 46, offers: 21, pct: "35%", fee: 32490, lat: 51.4460, lng: -0.0820 },
-            { name: "Highgate School", type: "Independent", gender: "Co-ed", rank: 19, offers: 33, pct: "35%", fee: 32787, lat: 51.5710, lng: -0.1480 },
-            { name: "UCS Hampstead", type: "Independent", gender: "Boys (co-ed 6th)", rank: 72, offers: 15, pct: "19%", fee: 32913, lat: 51.5560, lng: -0.1770 },
-            { name: "King's College School", type: "Independent", gender: "Co-ed", rank: 11, offers: 42, pct: "32%", fee: 35820, lat: 51.4270, lng: -0.2140 },
-            { name: "St Paul's Girls' School", type: "Independent", gender: "Girls", rank: 10, offers: 46, pct: "47%", fee: 37242, lat: 51.4910, lng: -0.2370 },
-            { name: "Westminster School", type: "Independent", gender: "Co-ed (6th form)", rank: 1, offers: 69, pct: "42%", fee: 46353, lat: 51.4995, lng: -0.1275 },
+            { name: "James Allen's Girls' School", type: "Independent", gender: "Girls", entry: "11+", rank: 45, offers: 21, pct: "43%", fee: 30438, lat: 51.4448, lng: -0.0740 },
+            { name: "Trinity School, Croydon", type: "Independent", gender: "Co-ed", entry: "11+, 13+, 16+", rank: 69, offers: 15, pct: "33%", fee: 30468, lat: 51.3650, lng: -0.0830 },
+            { name: "NLCS", type: "Independent", gender: "Girls", entry: "11+, 16+", rank: 42, offers: 22, pct: "28%", fee: 31095, lat: 51.6110, lng: -0.2670 },
+            { name: "Latymer Upper School", type: "Independent", gender: "Co-ed", entry: "11+, 13+, 16+", rank: 31, offers: 25, pct: "28%", fee: 32025, lat: 51.4930, lng: -0.2350 },
+            { name: "Dulwich College", type: "Independent", gender: "Boys (co-ed 6th)", entry: "11+, 13+, 16+ (girls)", rank: 37, offers: 23, pct: "27%", fee: 32118, lat: 51.4410, lng: -0.0850 },
+            { name: "Alleyn's School", type: "Independent", gender: "Co-ed", entry: "11+, 13+, 16+", rank: 46, offers: 21, pct: "35%", fee: 32490, lat: 51.4460, lng: -0.0820 },
+            { name: "Highgate School", type: "Independent", gender: "Co-ed", entry: "11+, 13+, 16+", rank: 19, offers: 33, pct: "35%", fee: 32787, lat: 51.5710, lng: -0.1480 },
+            { name: "UCS Hampstead", type: "Independent", gender: "Boys (co-ed 6th)", entry: "11+, 16+ (girls)", rank: 72, offers: 15, pct: "19%", fee: 32913, lat: 51.5560, lng: -0.1770 },
+            { name: "King's College School", type: "Independent", gender: "Co-ed", entry: "11+, 13+, 16+", rank: 11, offers: 42, pct: "32%", fee: 35820, lat: 51.4270, lng: -0.2140 },
+            { name: "St Paul's Girls' School", type: "Independent", gender: "Girls", entry: "11+, 16+", rank: 10, offers: 46, pct: "47%", fee: 37242, lat: 51.4910, lng: -0.2370 },
+            { name: "Westminster School", type: "Independent", gender: "Becoming fully co-ed", entry: "13+, 16+ · Girls from Sep 2028 (Year 9)", rank: 1, offers: 69, pct: "42%", fee: 46353, lat: 51.4995, lng: -0.1275 },
         ];
 
-        // Free schools
+        // Render all
         freeSchools.forEach(s => createMarker(s.lat, s.lng, s.color, s, 10));
+        sixthFormSchools.forEach(s => createMarker(s.lat, s.lng, s.color, s, 10, 'square'));
+        paidSchools.forEach(s => createMarker(s.lat, s.lng, feeColor(s.fee), s, 12));
 
-        // Paid schools with fee-based gradient
-        paidSchools.forEach(s => {
-            const color = feeColor(s.fee);
-            createMarker(s.lat, s.lng, color, s, 12);
-        });
+        // Fit bounds to show all markers
+        const allCoords = [...freeSchools, ...sixthFormSchools, ...paidSchools].map(s => [s.lat, s.lng]);
+        map.fitBounds(allCoords, { padding: [30, 30] });
 
         // Legend
         const legend = L.control({ position: 'bottomright' });
@@ -115,13 +138,14 @@
                 <div class="legend-item"><span class="legend-dot" style="background:#2ecc40"></span><span>Grammar</span></div>
                 <div class="legend-item"><span class="legend-dot" style="background:#0074d9"></span><span>State</span></div>
                 <div class="legend-item"><span class="legend-dot" style="background:#ff851b"></span><span>Partially-selective</span></div>
+                <div class="legend-item"><span class="legend-dot" style="background:#e056fd;border-radius:3px"></span><span>Sixth-form college (16+ only)</span></div>
                 <div style="margin-top:8px;"><strong style="font-size:12px;">Independent (paid):</strong></div>
                 <div class="legend-gradient">
                     <span style="font-size:11px;">£30k</span>
                     <div class="gradient-bar" style="background: linear-gradient(to right, rgb(200,150,220), rgb(120,30,180))"></div>
                     <span style="font-size:11px;">£46k</span>
                 </div>
-                <p style="margin-top:8px; font-size:11px; color:#888;">Click markers for details</p>
+                <p style="margin-top:8px; font-size:11px; color:#888;">Click markers for details · Entry points shown</p>
             `;
             return div;
         };
