@@ -335,6 +335,10 @@
 
         function updateAll() {
             renderMarkers();
+            if (document.getElementById('f-commute').classList.contains('active')) {
+                hideCommuteLayer();
+                showCommuteLayer();
+            }
             saveFilters();
         }
 
@@ -479,7 +483,8 @@
                 radius: 8, fillColor: '#e74c3c', color: '#fff', weight: 3, fillOpacity: 1
             }).addTo(map).bindTooltip('2 Kingdom St, W2', {permanent: false});
             commuteRings.push(origin);
-            schools.forEach(s => {
+            const visible = getVisibleSchools();
+            visible.forEach(s => {
                 const mins = schoolCommute[s.name];
                 if (mins === undefined) return;
                 const ring = L.circleMarker([s.lat, s.lng], {
