@@ -41,9 +41,15 @@
         }
         .filter-btn.active { border-color: var(--c, #333); background: var(--bg, #eee); color: var(--tc, #333); font-weight: 600; }
         .filter-btn:hover { border-color: #999; }
-        .color-key { margin-top: 8px; border-top: 1px solid #eee; padding-top: 6px; }
-        .color-key-item { display: flex; align-items: center; gap: 6px; font-size: 11px; padding: 1px 0; }
-        .color-dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid rgba(0,0,0,0.3); flex-shrink: 0; }
+        .color-bar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: rgba(255,255,255,0.95); padding: 4px 12px;
+            display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center;
+            font-size: 10px; color: #555; z-index: 1000;
+            border-top: 1px solid #ddd; box-shadow: 0 -1px 4px rgba(0,0,0,0.1);
+        }
+        .color-bar-item { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+        .color-bar-dot { width: 9px; height: 9px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.25); flex-shrink: 0; }
         .popup-content h3 { font-size: 14px; margin-bottom: 4px; color: #222; }
         .popup-content p { font-size: 12px; margin: 2px 0; color: #555; }
         .popup-content .oxbridge { color: #d35400; font-weight: 600; }
@@ -103,6 +109,11 @@
             { name: "Nonsuch High School for Girls", type: "grammar", gender: "girls", top80: false, free: true, entry: "11+, 16+", lat: 51.3554, lng: -0.2239 },
             { name: "Wallington High School for Girls", type: "grammar", gender: "girls", top80: false, free: true, entry: "11+, 16+", lat: 51.348, lng: -0.1488 },
             { name: "Woodford County High School", type: "grammar", gender: "girls", top80: false, free: true, entry: "11+, 16+", lat: 51.607, lng: 0.0185 },
+            // Boys grammar not in top 80
+            { name: "Beths Grammar School", type: "grammar", gender: "boys", top80: false, free: true, entry: "11+, 16+", lat: 51.4410, lng: 0.1490 },
+            { name: "Chislehurst & Sidcup Grammar", type: "grammar", gender: "coed", top80: false, free: true, entry: "11+, 16+", lat: 51.4210, lng: 0.0710 },
+            { name: "Ilford County High School", type: "grammar", gender: "boys", top80: false, free: true, entry: "11+, 16+", lat: 51.5790, lng: 0.0580 },
+            { name: "Wallington County Grammar School", type: "grammar", gender: "boys", top80: false, free: true, entry: "11+, 16+", lat: 51.3590, lng: -0.1530 },
             // === PARTIALLY-SELECTIVE - NOT TOP 80 ===
             { name: "Graveney School", type: "partial", gender: "coed", top80: false, free: true, entry: "11+, 16+", lat: 51.4235, lng: -0.151, note: "25% general ability" },
             { name: "Grey Coat Hospital", type: "partial", gender: "girls", top80: false, free: true, entry: "11+, 16+", lat: 51.498, lng: -0.132, note: "Language aptitude, co-ed 6th" },
@@ -204,15 +215,7 @@
                             <button class="filter-btn" id="f-top80" style="--c:#d35400;--bg:#fdebd0;--tc:#9c640c;">Top 80 only</button>
                             <button class="filter-btn" id="f-free" style="--c:#27ae60;--bg:#d5f5e3;--tc:#1e8449;">Free only</button>
                         </div>
-                    </div>
-                    <div class="color-key">
-                        <div class="color-key-item"><span class="color-dot" style="background:#2ecc40"></span>Grammar (Top 80)</div>
-                        <div class="color-key-item"><span class="color-dot" style="background:#a3d977"></span>Grammar (other)</div>
-                        <div class="color-key-item"><span class="color-dot" style="background:#0074d9"></span>State</div>
-                        <div class="color-key-item"><span class="color-dot" style="background:#ff851b"></span>Partial (Top 80)</div>
-                        <div class="color-key-item"><span class="color-dot" style="background:#ffc04d"></span>Partial (other)</div>
-                        <div class="color-key-item"><span class="color-dot" style="background:rgb(200,150,220)"></span>Independent (<span style="color:rgb(200,150,220)">£28k</span> – <span style="color:rgb(120,30,180)">£64k</span>)</div>
-                    </div>
+                </div>
                 </div>
             `;
 
@@ -248,6 +251,20 @@
         renderMarkers();
         const allCoords = schools.map(s => [s.lat, s.lng]);
         map.fitBounds(allCoords, { padding: [30, 30] });
+
+        // Fixed color bar at bottom
+        const bar = document.createElement('div');
+        bar.className = 'color-bar';
+        bar.innerHTML = `
+            <span class="color-bar-item"><span class="color-bar-dot" style="background:#2ecc40"></span>Grammar (Top 80)</span>
+            <span class="color-bar-item"><span class="color-bar-dot" style="background:#a3d977"></span>Grammar</span>
+            <span class="color-bar-item"><span class="color-bar-dot" style="background:#0074d9"></span>State</span>
+            <span class="color-bar-item"><span class="color-bar-dot" style="background:#ff851b"></span>Partial (Top 80)</span>
+            <span class="color-bar-item"><span class="color-bar-dot" style="background:#ffc04d"></span>Partial</span>
+            <span class="color-bar-item"><span class="color-bar-dot" style="background:rgb(200,150,220)"></span>Independent <span style="color:rgb(200,150,220)">£28k</span>–<span style="color:rgb(120,30,180)">£64k</span></span>
+            <span class="color-bar-item" style="color:#999">● Top 80 = larger</span>
+        `;
+        document.body.appendChild(bar);
     </script>
 </body>
 </html>
