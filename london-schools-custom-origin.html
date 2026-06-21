@@ -185,7 +185,15 @@
         </div>
     </div>
     <div id="bottom-panel">
-        <div id="commute-hint" style="display:none; padding: 4px 12px; font-size: 11px; color: #2980b9; background: #eaf2fa; border-bottom: 1px solid #d4e6f1;">\ud83d\udc46 Tap anywhere on the map to set commute origin<span id="commute-status" style="display:none; margin-left: 10px; color: #666;"></span></div>
+        <div id="commute-controls" style="display:none; padding: 6px 12px; font-size: 12px; background: #eaf2fa; border-bottom: 1px solid #d4e6f1; display: none;">
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <button id="pick-origin-btn" style="padding:4px 10px; border-radius:4px; border:1.5px solid #2980b9; background:white; font-size:11px; cursor:pointer; color:#2980b9; font-weight:600;">\ud83d\udccd Pick on map</button>
+                <span style="color:#888; font-size:10px;">or</span>
+                <input id="postcode-input" type="text" placeholder="Postcode (e.g. W2 6BD)" style="padding:4px 8px; border:1.5px solid #ccc; border-radius:4px; font-size:11px; width:140px;" />
+                <button id="postcode-go" style="padding:4px 8px; border-radius:4px; border:1.5px solid #2980b9; background:#2980b9; color:white; font-size:11px; cursor:pointer;">Go</button>
+                <span id="commute-status" style="display:none; font-size:10px; color:#666;"></span>
+            </div>
+        </div>
         <div class="legend-row">
             <span class="school-count" id="school-count"></span>
             <span class="legend-item"><span class="legend-dot" style="background:#2ecc40"></span>Grammar (T80)</span>
@@ -481,13 +489,13 @@
         }
         function hidePriceLayer() { if (priceLayer) { map.removeLayer(priceLayer); priceLayer = null; } }
 
-        // === COMMUTE LAYER ===
-        // === COMMUTE LAYER (TfL API) ===
+        // === COMMUTE LAYER (TfL API + pick/postcode) ===
         let commuteRings = [];
         let commuteOrigin = null;
         let commuteOriginMarker = null;
         let commuteActive = false;
         let commuteAbort = null;
+        let pickMode = false;
 
         function commuteColor(minutes) {
             const min = 10, max = 65;
@@ -498,18 +506,14 @@
         }
 
         async function fetchCommuteTimes(originLat, originLng) {
-            // Clear old data
             Object.keys(schoolCommute).forEach(k => delete schoolCommute[k]);
             hideCommuteRings();
-
             const visible = getVisibleSchools();
             const controller = new AbortController();
             commuteAbort = controller;
-
-            // Show loading
-            document.getElementById('commute-status').textContent = `Loading 0/${visible.length}...`;
-            document.getElementById('commute-status').style.display = '';
-
+            const statusEl = document.getElementById('commute-status');
+            statusEl.textContent = 'Loading 0/' + visible.length + '...';
+            statusEl.style.display = '';
             let done = 0;
             const batchSize = 5;
             for (let i = 0; i < visible.length; i += batchSize) {
@@ -517,27 +521,26 @@
                 const batch = visible.slice(i, i + batchSize);
                 await Promise.all(batch.map(async (s) => {
                     try {
-                        const url = `https://api.tfl.gov.uk/Journey/JourneyResults/${originLat},${originLng}/to/${s.lat},${s.lng}?mode=tube,bus,overground,dlr,elizabeth-line,tram,national-rail&timeIs=departing`;
+                        const url = 'https://api.tfl.gov.uk/Journey/JourneyResults/' + originLat + ',' + originLng + '/to/' + s.lat + ',' + s.lng + '?mode=tube,bus,overground,dlr,elizabeth-line,tram,national-rail&timeIs=departing';
                         const resp = await fetch(url, { signal: controller.signal });
                         if (!resp.ok) return;
                         const data = await resp.json();
                         if (data.journeys && data.journeys.length > 0) {
                             const mins = data.journeys[0].duration;
                             schoolCommute[s.name] = mins;
-                            // Add ring immediately
                             const ring = L.circleMarker([s.lat, s.lng], {
                                 radius: 15, fillColor: 'transparent', color: commuteColor(mins),
                                 weight: 3, opacity: 0.8, fillOpacity: 0, interactive: false
                             }).addTo(map);
                             commuteRings.push(ring);
                         }
-                    } catch(e) { /* timeout or abort */ }
+                    } catch(e) {}
                     done++;
-                    document.getElementById('commute-status').textContent = `Loading ${done}/${visible.length}...`;
+                    statusEl.textContent = 'Loading ' + done + '/' + visible.length + '...';
                 }));
             }
-            document.getElementById('commute-status').textContent = `✅ ${done} schools`;
-            setTimeout(() => { document.getElementById('commute-status').style.display = 'none'; }, 3000);
+            statusEl.textContent = '✅ ' + done + ' schools';
+            setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
         }
 
         function hideCommuteRings() {
@@ -545,36 +548,82 @@
             commuteRings = [];
         }
 
+        function setOrigin(lat, lng) {
+            commuteOrigin = [lat, lng];
+            if (commuteOriginMarker) map.removeLayer(commuteOriginMarker);
+            commuteOriginMarker = L.circleMarker([lat, lng], {
+                radius: 8, fillColor: '#e74c3c', color: '#fff', weight: 3, fillOpacity: 1
+            }).addTo(map).bindTooltip('Origin', {permanent: false});
+            if (commuteAbort) commuteAbort.abort();
+            fetchCommuteTimes(lat, lng);
+        }
+
         function showCommuteLayer() {
             commuteActive = true;
-            document.getElementById('commute-hint').style.display = '';
-            if (commuteOrigin) {
-                fetchCommuteTimes(commuteOrigin[0], commuteOrigin[1]);
-            }
+            document.getElementById('commute-controls').style.display = '';
         }
         function hideCommuteLayer() {
             commuteActive = false;
+            pickMode = false;
+            document.getElementById('map').style.cursor = '';
+            var btn = document.getElementById('pick-origin-btn');
+            btn.style.background = 'white'; btn.style.color = '#2980b9';
             if (commuteAbort) commuteAbort.abort();
             hideCommuteRings();
             if (commuteOriginMarker) { map.removeLayer(commuteOriginMarker); commuteOriginMarker = null; }
             commuteOrigin = null;
-            document.getElementById('commute-hint').style.display = 'none';
+            document.getElementById('commute-controls').style.display = 'none';
             document.getElementById('commute-status').style.display = 'none';
         }
 
-        // Click on map to set commute origin
-        map.on('click', function(e) {
-            if (!commuteActive) return;
-            commuteOrigin = [e.latlng.lat, e.latlng.lng];
-            if (commuteOriginMarker) map.removeLayer(commuteOriginMarker);
-            commuteOriginMarker = L.circleMarker(e.latlng, {
-                radius: 8, fillColor: '#e74c3c', color: '#fff', weight: 3, fillOpacity: 1
-            }).addTo(map).bindTooltip('Origin', {permanent: false});
-            if (commuteAbort) commuteAbort.abort();
-            fetchCommuteTimes(e.latlng.lat, e.latlng.lng);
+        // Pick mode toggle
+        document.getElementById('pick-origin-btn').addEventListener('click', function() {
+            pickMode = !pickMode;
+            this.style.background = pickMode ? '#2980b9' : 'white';
+            this.style.color = pickMode ? 'white' : '#2980b9';
+            document.getElementById('map').style.cursor = pickMode ? 'crosshair' : '';
         });
 
-        // === LAYER TOGGLES ===
+        // Map click in pick mode only
+        map.on('click', function(e) {
+            if (!pickMode) return;
+            pickMode = false;
+            var btn = document.getElementById('pick-origin-btn');
+            btn.style.background = 'white'; btn.style.color = '#2980b9';
+            document.getElementById('map').style.cursor = '';
+            setOrigin(e.latlng.lat, e.latlng.lng);
+        });
+
+        // Postcode geocoding
+        async function geocodePostcode(pc) {
+            const clean = pc.replace(/s+/g, '').toUpperCase();
+            const resp = await fetch('https://api.postcodes.io/postcodes/' + clean);
+            if (!resp.ok) return null;
+            const data = await resp.json();
+            if (data.status === 200 && data.result) {
+                return { lat: data.result.latitude, lng: data.result.longitude };
+            }
+            return null;
+        }
+        document.getElementById('postcode-go').addEventListener('click', async function() {
+            const pc = document.getElementById('postcode-input').value.trim();
+            if (!pc) return;
+            const statusEl = document.getElementById('commute-status');
+            statusEl.textContent = 'Geocoding...'; statusEl.style.display = '';
+            const loc = await geocodePostcode(pc);
+            if (loc) {
+                setOrigin(loc.lat, loc.lng);
+                map.setView([loc.lat, loc.lng], 12);
+            } else {
+                statusEl.textContent = '❌ Postcode not found';
+                setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+            }
+        });
+        document.getElementById('postcode-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') document.getElementById('postcode-go').click();
+        });
+
+        // Layer toggle handlers
         document.getElementById('f-prices').addEventListener('click', function() {
             this.classList.toggle('active');
             this.classList.contains('active') ? showPriceLayer() : hidePriceLayer();
@@ -587,7 +636,6 @@
             document.getElementById('commute-legend').style.display = this.classList.contains('active') ? '' : 'none';
             saveFilters();
         });
-
         // === INIT (must be after all data + handlers) ===
         // One-time reset for broken localStorage from v1
         if (!localStorage.getItem('schools-map-v2')) {
