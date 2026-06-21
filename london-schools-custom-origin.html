@@ -187,7 +187,7 @@
     <div id="bottom-panel">
         <div id="commute-controls" style="display:none; padding: 6px 12px; font-size: 12px; background: #eaf2fa; border-bottom: 1px solid #d4e6f1; display: none;">
             <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                <button id="pick-origin-btn" style="padding:4px 10px; border-radius:4px; border:1.5px solid #2980b9; background:white; font-size:11px; cursor:pointer; color:#2980b9; font-weight:600;">\ud83d\udccd Pick on map</button>
+                <button id="pick-origin-btn" style="padding:4px 10px; border-radius:4px; border:1.5px solid #2980b9; background:white; font-size:11px; cursor:pointer; color:#2980b9; font-weight:600;">📍 Pick on map</button>
                 <span style="color:#888; font-size:10px;">or</span>
                 <input id="postcode-input" type="text" placeholder="Postcode (e.g. W2 6BD)" style="padding:4px 8px; border:1.5px solid #ccc; border-radius:4px; font-size:11px; width:140px;" />
                 <button id="postcode-go" style="padding:4px 8px; border-radius:4px; border:1.5px solid #2980b9; background:#2980b9; color:white; font-size:11px; cursor:pointer;">Go</button>
@@ -205,7 +205,7 @@
             <span class="legend-item" style="color:#aaa">● larger = Top 80</span>
         </div>
         <div class="legend-row" id="commute-legend" style="display:none">
-            <span class="legend-item">🚇 Commute from Paddington:</span>
+            <span class="legend-item">🚇 Commute from origin:</span>
             <span class="legend-item"><span class="legend-dot" style="background:rgb(0,255,30)"></span>&le;15 min</span>
             <span class="legend-item"><span class="legend-dot" style="background:rgb(128,255,30)"></span>20 min</span>
             <span class="legend-item"><span class="legend-dot" style="background:rgb(255,255,30)"></span>30 min</span>
@@ -353,7 +353,7 @@
                 if (s.fee) html += `<p class="fee">£${s.fee.toLocaleString()}/year</p>`;
                 if (s.entry) html += `<p class="entry">Entry: ${s.entry}</p>`;
                 const mins = typeof schoolCommute !== 'undefined' && schoolCommute[s.name];
-                if (mins) html += `<p><strong>\ud83d\ude87 Commute:</strong> ${mins} min from Paddington</p>`;
+                if (mins) html += `<p><strong>🚇 Commute:</strong> ${mins} min from origin</p>`;
                 html += `</div>`;
                 marker.bindPopup(html);
                 markers.push(marker);
