@@ -18,7 +18,10 @@
             font-size: 13px;
             line-height: 1.3;
         }
-        .legend h4 { margin-bottom: 4px; font-size: 13px; color: #333; }
+        .legend h4 { margin-bottom: 4px; font-size: 13px; color: #333; cursor: pointer; user-select: none; }
+        .legend h4::after { content: ' ▾'; font-size: 10px; }
+        .legend.collapsed h4::after { content: ' ▸'; }
+        .legend.collapsed .legend-body { display: none; }
         .legend-item { display: flex; align-items: center; gap: 6px; padding: 3px 0; cursor: pointer; user-select: none; }
         .legend-item.disabled { opacity: 0.35; text-decoration: line-through; }
         .legend-item input[type=checkbox] { width: 16px; height: 16px; margin: 0; cursor: pointer; accent-color: var(--accent); }
@@ -162,15 +165,20 @@
             const div = L.DomUtil.create('div', 'legend');
             div.innerHTML = `
                 <h4>London Selective Schools</h4>
-                <p style="font-size:10px;color:#888;margin-bottom:4px;">Girls & co-ed · Toggle layers:</p>
+                <div class="legend-body">
                 <label class="legend-item" data-layer="freeGrammarTop"><input type="checkbox" checked style="--accent:#2ecc40"><span class="legend-dot" style="background:#2ecc40"></span><span>Grammar — Top 80 (free)</span></label>
                 <label class="legend-item" data-layer="freeStateTop"><input type="checkbox" checked style="--accent:#0074d9"><span class="legend-dot" style="background:#0074d9"></span><span>State — Top 80 (free)</span></label>
                 <label class="legend-item" data-layer="freePartialTop"><input type="checkbox" checked style="--accent:#ff851b"><span class="legend-dot" style="background:#ff851b"></span><span>Partially-selective — Top 80 (free)</span></label>
-                <label class="legend-item" data-layer="paidTop"><input type="checkbox" checked style="--accent:#9b59b6"><span class="legend-dot" style="background:rgb(160,100,200)"></span><span>Independent — Top 80 (£30-46k)</span></label>
+                <label class="legend-item" data-layer="paidTop"><input type="checkbox" checked style="--accent:#9b59b6"><span class="legend-dot" style="background:rgb(160,100,200)"></span><span>Independent — Top 80 (<span style="color:rgb(200,150,220)">£30k</span>–<span style="color:rgb(120,30,180)">£46k</span>)</span></label>
                 <label class="legend-item" data-layer="grammarOther"><input type="checkbox" checked style="--accent:#a3d977"><span class="legend-dot" style="background:#a3d977"></span><span>Grammar — other (free)</span></label>
                 <label class="legend-item" data-layer="partialOther"><input type="checkbox" checked style="--accent:#ffc04d"><span class="legend-dot" style="background:#ffc04d"></span><span>Partially-selective — other (free)</span></label>
-                <p style="font-size:9px;color:#999;margin-top:4px;">Partially-selective = ~25% мест по тесту, остальные по району.<br>Independent: чем темнее фиолетовый — тем дороже.</p>
+                </div>
             `;
+
+            // Collapse/expand
+            div.querySelector('h4').addEventListener('click', () => {
+                div.classList.toggle('collapsed');
+            });
 
             // Toggle via checkboxes
             div.querySelectorAll('[data-layer]').forEach(el => {
