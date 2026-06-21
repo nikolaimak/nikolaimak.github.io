@@ -93,8 +93,12 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.25);
             z-index: 1000; width: 320px;
             font-size: 12px; color: #333;
-            max-height: calc(100vh - 120px);
+            max-height: calc(100vh - 110px);
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        @media (max-width: 600px) {
+            #info-panel { width: calc(100vw - 20px); right: 10px; max-height: 70vh; }
         }
         #info-header {
             display: flex; justify-content: space-between; align-items: center;
@@ -146,7 +150,7 @@
             <h5>Entry points</h5>
             <p>11+ = Year 7 entry (age 10–11). 13+ = Year 9 entry. 16+ = Sixth Form entry. Some single-sex schools open to both genders at 16+.</p>
 
-            <p class="info-src">Sources: Education (Grammar School Designation) Order 1998; Wikipedia "List of grammar schools in England" &amp; "Partially selective school (England)"; Oxbridge Top 80 league tables.</p>
+            <p class="info-src">Sources: <a href="https://www.legislation.gov.uk/uksi/1998/2219/contents/made" target="_blank">Education (Grammar School Designation) Order 1998</a>; Wikipedia: <a href="https://en.wikipedia.org/wiki/List_of_grammar_schools_in_England" target="_blank">List of grammar schools in England</a> &amp; <a href="https://en.wikipedia.org/wiki/Partially_selective_school_(England)" target="_blank">Partially selective school (England)</a>; <a href="https://www.ox.ac.uk/about/facts-and-figures/" target="_blank">Oxford</a>/<a href="https://www.undergraduate.study.cam.ac.uk/apply/statistics" target="_blank">Cambridge</a> admissions data via league tables.</p>
         </div>
     </div>
     <div id="bottom-panel">
