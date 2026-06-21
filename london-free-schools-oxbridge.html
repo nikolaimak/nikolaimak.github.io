@@ -157,7 +157,7 @@
         map.fitBounds(allSchools.map(s => [s.lat, s.lng]), { padding: [30, 30] });
 
         // Legend with toggle
-        const legend = L.control({ position: 'bottomright' });
+        const legend = L.control({ position: 'topleft' });
         legend.onAdd = function() {
             const div = L.DomUtil.create('div', 'legend');
             div.innerHTML = `
