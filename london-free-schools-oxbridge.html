@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>London Free Schools — Oxbridge Top 80</title>
+    <title>London Schools — Oxbridge Top 80 (Girls & Co-ed)</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -17,200 +17,91 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
             font-size: 13px;
             line-height: 1.8;
+            max-width: 260px;
         }
-        .legend h4 {
-            margin-bottom: 6px;
-            font-size: 14px;
-            color: #333;
-        }
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .legend-dot {
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            border: 2px solid rgba(0,0,0,0.3);
-            flex-shrink: 0;
-        }
-        .dot-grammar { background: #2ecc40; }
-        .dot-state { background: #0074d9; }
-        .dot-partial { background: #ff851b; }
-        .popup-content h3 {
-            font-size: 14px;
-            margin-bottom: 4px;
-            color: #222;
-        }
-        .popup-content p {
-            font-size: 12px;
-            margin: 2px 0;
-            color: #555;
-        }
-        .popup-content .rank {
-            font-weight: 600;
-            color: #333;
-        }
+        .legend h4 { margin-bottom: 6px; font-size: 14px; color: #333; }
+        .legend-item { display: flex; align-items: center; gap: 8px; }
+        .legend-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(0,0,0,0.3); flex-shrink: 0; }
+        .legend-gradient { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+        .gradient-bar { width: 120px; height: 14px; border-radius: 7px; border: 1px solid #ccc; }
+        .popup-content h3 { font-size: 14px; margin-bottom: 4px; color: #222; }
+        .popup-content p { font-size: 12px; margin: 2px 0; color: #555; }
+        .popup-content .rank { font-weight: 600; color: #333; }
+        .popup-content .fee { font-weight: 600; color: #8e44ad; }
     </style>
 </head>
 <body>
     <div id="map"></div>
     <script>
-        const map = L.map('map').setView([51.51, -0.12], 11);
-
+        const map = L.map('map').setView([51.50, -0.12], 11);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
             maxZoom: 18
         }).addTo(map);
 
-        // Custom coloured circle markers
-        function createMarker(lat, lng, color, school) {
+        function createMarker(lat, lng, color, school, radius) {
             const marker = L.circleMarker([lat, lng], {
-                radius: 10,
+                radius: radius || 10,
                 fillColor: color,
                 color: '#333',
                 weight: 2,
                 opacity: 0.9,
                 fillOpacity: 0.85
             }).addTo(map);
-
-            marker.bindPopup(`
-                <div class="popup-content">
-                    <h3>${school.name}</h3>
-                    <p><strong>Type:</strong> ${school.type}</p>
-                    <p class="rank">Rank #${school.rank} — ${school.offers} Oxbridge offers (${school.pct})</p>
-                    <p><strong>Area:</strong> ${school.area}</p>
-                </div>
-            `);
-
+            let popupHtml = `<div class="popup-content"><h3>${school.name}</h3>
+                <p><strong>Type:</strong> ${school.type}${school.gender ? ' · ' + school.gender : ''}</p>
+                <p class="rank">Rank #${school.rank} — ${school.offers} offers (${school.pct})</p>`;
+            if (school.fee) popupHtml += `<p class="fee">£${school.fee.toLocaleString()}/year</p>`;
+            popupHtml += `</div>`;
+            marker.bindPopup(popupHtml);
             return marker;
         }
 
-        const colors = {
-            grammar: '#2ecc40',
-            state: '#0074d9',
-            partial: '#ff851b'
-        };
+        // Fee gradient: light purple (cheapest) → dark purple (most expensive)
+        function feeColor(fee) {
+            const minFee = 30000, maxFee = 47000;
+            const t = Math.min(1, Math.max(0, (fee - minFee) / (maxFee - minFee)));
+            const r = Math.round(200 - t * 80);
+            const g = Math.round(150 - t * 120);
+            const b = Math.round(220 - t * 40);
+            return `rgb(${r},${g},${b})`;
+        }
 
-        const schools = [
-            {
-                name: "Queen Elizabeth's School, Barnet",
-                type: "Grammar",
-                rank: 9, offers: 47, pct: "44%",
-                area: "Barnet",
-                lat: 51.6525, lng: -0.1985,
-                color: colors.grammar
-            },
-            {
-                name: "St Olave's and St Saviour's Grammar School",
-                type: "Grammar",
-                rank: 15, offers: 39, pct: "35%",
-                area: "Orpington",
-                lat: 51.3764, lng: 0.0471,
-                color: colors.grammar
-            },
-            {
-                name: "Tiffin School",
-                type: "Grammar",
-                rank: 16, offers: 38, pct: "32%",
-                area: "Kingston upon Thames",
-                lat: 51.4128, lng: -0.3007,
-                color: colors.grammar
-            },
-            {
-                name: "Henrietta Barnett School",
-                type: "Grammar",
-                rank: 18, offers: 34, pct: "43%",
-                area: "Hampstead Garden Suburb",
-                lat: 51.5792, lng: -0.1870,
-                color: colors.grammar
-            },
-            {
-                name: "Camden School for Girls",
-                type: "State",
-                rank: 20, offers: 31, pct: "41%",
-                area: "Camden",
-                lat: 51.5559, lng: -0.1427,
-                color: colors.state
-            },
-            {
-                name: "Wilson's School",
-                type: "Grammar",
-                rank: 23, offers: 29, pct: "31%",
-                area: "Wallington, Sutton",
-                lat: 51.3580, lng: -0.1540,
-                color: colors.grammar
-            },
-            {
-                name: "The Tiffin Girls' School",
-                type: "Grammar",
-                rank: 48, offers: 21, pct: "31%",
-                area: "Kingston upon Thames",
-                lat: 51.4103, lng: -0.2985,
-                color: colors.grammar
-            },
-            {
-                name: "Dame Alice Owen's School",
-                type: "Partially-selective",
-                rank: 49, offers: 21, pct: "26%",
-                area: "Potters Bar, Hertfordshire",
-                lat: 51.6940, lng: -0.1720,
-                color: colors.partial
-            },
-            {
-                name: "Mossbourne Community Academy",
-                type: "State",
-                rank: 52, offers: 20, pct: "43%",
-                area: "Hackney",
-                lat: 51.5494, lng: -0.0558,
-                color: colors.state
-            },
-            {
-                name: "The Latymer School",
-                type: "Grammar",
-                rank: 54, offers: 20, pct: "27%",
-                area: "Edmonton",
-                lat: 51.6170, lng: -0.0600,
-                color: colors.grammar
-            },
-            {
-                name: "St Michael's Catholic Grammar School",
-                type: "Grammar",
-                rank: 73, offers: 14, pct: "34%",
-                area: "Finchley",
-                lat: 51.6130, lng: -0.1760,
-                color: colors.grammar
-            },
-            {
-                name: "The London Oratory School",
-                type: "State",
-                rank: 74, offers: 14, pct: "30%",
-                area: "Fulham",
-                lat: 51.4830, lng: -0.1930,
-                color: colors.state
-            },
-            {
-                name: "Twyford Church of England High School",
-                type: "State",
-                rank: 74, offers: 14, pct: "30%",
-                area: "Acton",
-                lat: 51.5130, lng: -0.2680,
-                color: colors.state
-            },
-            {
-                name: "Sutton Grammar School",
-                type: "Grammar",
-                rank: 78, offers: 14, pct: "26%",
-                area: "Sutton",
-                lat: 51.3610, lng: -0.1910,
-                color: colors.grammar
-            }
+        const freeSchools = [
+            // Co-ed & girls grammar/state (boys-only removed)
+            { name: "St Olave's Grammar School", type: "Grammar", gender: "Co-ed 6th form", rank: 15, offers: 39, pct: "35%", lat: 51.3764, lng: 0.0471, color: '#2ecc40' },
+            { name: "Henrietta Barnett School", type: "Grammar", gender: "Girls", rank: 18, offers: 34, pct: "43%", lat: 51.5792, lng: -0.1870, color: '#2ecc40' },
+            { name: "Camden School for Girls", type: "State", gender: "Girls (co-ed 6th)", rank: 20, offers: 31, pct: "41%", lat: 51.5559, lng: -0.1427, color: '#0074d9' },
+            { name: "The Tiffin Girls' School", type: "Grammar", gender: "Girls", rank: 48, offers: 21, pct: "31%", lat: 51.4103, lng: -0.2985, color: '#2ecc40' },
+            { name: "Dame Alice Owen's School", type: "Partially-selective", gender: "Co-ed", rank: 49, offers: 21, pct: "26%", lat: 51.6940, lng: -0.1720, color: '#ff851b' },
+            { name: "Mossbourne Community Academy", type: "State", gender: "Co-ed", rank: 52, offers: 20, pct: "43%", lat: 51.5494, lng: -0.0558, color: '#0074d9' },
+            { name: "The Latymer School", type: "Grammar", gender: "Co-ed", rank: 54, offers: 20, pct: "27%", lat: 51.6170, lng: -0.0600, color: '#2ecc40' },
+            { name: "St Michael's Catholic Grammar", type: "Grammar", gender: "Girls", rank: 73, offers: 14, pct: "34%", lat: 51.6130, lng: -0.1760, color: '#2ecc40' },
+            { name: "Twyford CofE High School", type: "State", gender: "Co-ed", rank: 74, offers: 14, pct: "30%", lat: 51.5130, lng: -0.2680, color: '#0074d9' },
         ];
 
-        // Add markers
-        schools.forEach(school => {
-            createMarker(school.lat, school.lng, school.color, school);
+        const paidSchools = [
+            // Independent — girls & co-ed only (boys-only removed)
+            { name: "James Allen's Girls' School", type: "Independent", gender: "Girls", rank: 45, offers: 21, pct: "43%", fee: 30438, lat: 51.4448, lng: -0.0740 },
+            { name: "Trinity School, Croydon", type: "Independent", gender: "Co-ed", rank: 69, offers: 15, pct: "33%", fee: 30468, lat: 51.3650, lng: -0.0830 },
+            { name: "NLCS", type: "Independent", gender: "Girls", rank: 42, offers: 22, pct: "28%", fee: 31095, lat: 51.6110, lng: -0.2670 },
+            { name: "Latymer Upper School", type: "Independent", gender: "Co-ed", rank: 31, offers: 25, pct: "28%", fee: 32025, lat: 51.4930, lng: -0.2350 },
+            { name: "Dulwich College", type: "Independent", gender: "Boys (co-ed 6th)", rank: 37, offers: 23, pct: "27%", fee: 32118, lat: 51.4410, lng: -0.0850 },
+            { name: "Alleyn's School", type: "Independent", gender: "Co-ed", rank: 46, offers: 21, pct: "35%", fee: 32490, lat: 51.4460, lng: -0.0820 },
+            { name: "Highgate School", type: "Independent", gender: "Co-ed", rank: 19, offers: 33, pct: "35%", fee: 32787, lat: 51.5710, lng: -0.1480 },
+            { name: "UCS Hampstead", type: "Independent", gender: "Boys (co-ed 6th)", rank: 72, offers: 15, pct: "19%", fee: 32913, lat: 51.5560, lng: -0.1770 },
+            { name: "King's College School", type: "Independent", gender: "Co-ed", rank: 11, offers: 42, pct: "32%", fee: 35820, lat: 51.4270, lng: -0.2140 },
+            { name: "St Paul's Girls' School", type: "Independent", gender: "Girls", rank: 10, offers: 46, pct: "47%", fee: 37242, lat: 51.4910, lng: -0.2370 },
+            { name: "Westminster School", type: "Independent", gender: "Co-ed (6th form)", rank: 1, offers: 69, pct: "42%", fee: 46353, lat: 51.4995, lng: -0.1275 },
+        ];
+
+        // Free schools
+        freeSchools.forEach(s => createMarker(s.lat, s.lng, s.color, s, 10));
+
+        // Paid schools with fee-based gradient
+        paidSchools.forEach(s => {
+            const color = feeColor(s.fee);
+            createMarker(s.lat, s.lng, color, s, 12);
         });
 
         // Legend
@@ -218,18 +109,17 @@
         legend.onAdd = function() {
             const div = L.DomUtil.create('div', 'legend');
             div.innerHTML = `
-                <h4>London Free Schools — Oxbridge Top 80</h4>
-                <div class="legend-item">
-                    <span class="legend-dot dot-grammar"></span>
-                    <span>Grammar (9 schools)</span>
-                </div>
-                <div class="legend-item">
-                    <span class="legend-dot dot-state"></span>
-                    <span>State (4 schools)</span>
-                </div>
-                <div class="legend-item">
-                    <span class="legend-dot dot-partial"></span>
-                    <span>Partially-selective (1 school)</span>
+                <h4>London Oxbridge Top 80</h4>
+                <p style="font-size:11px;color:#888;margin-bottom:6px;">Boys-only schools excluded</p>
+                <strong style="font-size:12px;">Free:</strong>
+                <div class="legend-item"><span class="legend-dot" style="background:#2ecc40"></span><span>Grammar</span></div>
+                <div class="legend-item"><span class="legend-dot" style="background:#0074d9"></span><span>State</span></div>
+                <div class="legend-item"><span class="legend-dot" style="background:#ff851b"></span><span>Partially-selective</span></div>
+                <div style="margin-top:8px;"><strong style="font-size:12px;">Independent (paid):</strong></div>
+                <div class="legend-gradient">
+                    <span style="font-size:11px;">£30k</span>
+                    <div class="gradient-bar" style="background: linear-gradient(to right, rgb(200,150,220), rgb(120,30,180))"></div>
+                    <span style="font-size:11px;">£46k</span>
                 </div>
                 <p style="margin-top:8px; font-size:11px; color:#888;">Click markers for details</p>
             `;
