@@ -195,6 +195,24 @@
             <span class="legend-item"><span class="legend-dot" style="background:rgb(200,150,220)"></span>Independent <span style="color:rgb(200,150,220)">£28k</span>-<span style="color:rgb(120,30,180)">£64k</span></span>
             <span class="legend-item" style="color:#aaa">● larger = Top 80</span>
         </div>
+        <div class="legend-row" id="commute-legend" style="display:none">
+            <span class="legend-item">🚇 Commute from Paddington:</span>
+            <span class="legend-item"><span class="legend-dot" style="background:rgb(0,255,30)"></span>&le;15 min</span>
+            <span class="legend-item"><span class="legend-dot" style="background:rgb(128,255,30)"></span>20 min</span>
+            <span class="legend-item"><span class="legend-dot" style="background:rgb(255,255,30)"></span>30 min</span>
+            <span class="legend-item"><span class="legend-dot" style="background:rgb(255,170,30)"></span>40 min</span>
+            <span class="legend-item"><span class="legend-dot" style="background:rgb(255,80,30)"></span>50 min</span>
+            <span class="legend-item"><span class="legend-dot" style="background:rgb(255,0,30)"></span>60+ min</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#e74c3c;border-color:#fff"></span>Origin</span>
+        </div>
+        <div class="legend-row" id="price-legend" style="display:none">
+            <span class="legend-item">£ Median house price:</span>
+            <span class="legend-item"><span class="legend-dot" style="background:rgb(0,255,40)"></span>£300k</span>
+            <span class="legend-item"><span class="legend-dot" style="background:rgb(128,255,40)"></span>£450k</span>
+            <span class="legend-item"><span class="legend-dot" style="background:rgb(255,255,40)"></span>£600k</span>
+            <span class="legend-item"><span class="legend-dot" style="background:rgb(255,128,40)"></span>£800k</span>
+            <span class="legend-item"><span class="legend-dot" style="background:rgb(255,0,40)"></span>£1M+</span>
+        </div>
     </div>
     <script>
         const map = L.map('map', { zoomControl: false }).setView([51.48, -0.10], 11);
@@ -500,17 +518,19 @@
         document.getElementById('f-prices').addEventListener('click', function() {
             this.classList.toggle('active');
             this.classList.contains('active') ? showPriceLayer() : hidePriceLayer();
+            document.getElementById('price-legend').style.display = this.classList.contains('active') ? '' : 'none';
             saveFilters();
         });
         document.getElementById('f-commute').addEventListener('click', function() {
             this.classList.toggle('active');
             this.classList.contains('active') ? showCommuteLayer() : hideCommuteLayer();
+            document.getElementById('commute-legend').style.display = this.classList.contains('active') ? '' : 'none';
             saveFilters();
         });
 
         // Restore layer state
-        if (document.getElementById('f-prices').classList.contains('active')) showPriceLayer();
-        if (document.getElementById('f-commute').classList.contains('active')) showCommuteLayer();
+        if (document.getElementById('f-prices').classList.contains('active')) { showPriceLayer(); document.getElementById('price-legend').style.display = ''; }
+        if (document.getElementById('f-commute').classList.contains('active')) { showCommuteLayer(); document.getElementById('commute-legend').style.display = ''; }
     </script>
 </body>
 </html>
