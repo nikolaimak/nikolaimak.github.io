@@ -344,6 +344,8 @@
                 if (s.rank) html += `<p class="oxbridge">Oxbridge Top 80: #${s.rank} - ${s.offers} offers (${s.pct})</p>`;
                 if (s.fee) html += `<p class="fee">£${s.fee.toLocaleString()}/year</p>`;
                 if (s.entry) html += `<p class="entry">Entry: ${s.entry}</p>`;
+                const mins = typeof schoolCommute !== 'undefined' && schoolCommute[s.name];
+                if (mins) html += `<p><strong>\ud83d\ude87 Commute:</strong> ${mins} min from Paddington</p>`;
                 html += `</div>`;
                 marker.bindPopup(html);
                 markers.push(marker);
@@ -499,8 +501,8 @@
                 if (mins === undefined) return;
                 const ring = L.circleMarker([s.lat, s.lng], {
                     radius: 15, fillColor: 'transparent', color: commuteColor(mins),
-                    weight: 3, opacity: 0.8, fillOpacity: 0
-                }).addTo(map).bindTooltip(`${mins} min`, {permanent: false, direction: 'top', offset: [0, -12]});
+                    weight: 3, opacity: 0.8, fillOpacity: 0, interactive: false
+                }).addTo(map);
                 commuteRings.push(ring);
             });
         }
