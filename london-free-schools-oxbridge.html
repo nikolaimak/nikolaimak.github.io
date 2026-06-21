@@ -9,7 +9,7 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-        #map { width: 100%; height: 100vh; }
+        #map { width: 100%; height: calc(100vh - 90px); }
         .panel {
             background: white;
             padding: 10px 12px;
@@ -29,7 +29,6 @@
         }
         .toggle-btn:hover { background: #ddd; }
         .panel.collapsed .panel-body { display: none; }
-        .panel-body { }
         .panel-note { font-size: 10px; color: #999; margin-bottom: 8px; line-height: 1.3; }
         .filter-group { margin-bottom: 8px; }
         .filter-group-title { font-size: 11px; font-weight: 600; color: #555; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.3px; }
@@ -41,24 +40,127 @@
         }
         .filter-btn.active { border-color: var(--c, #333); background: var(--bg, #eee); color: var(--tc, #333); font-weight: 600; }
         .filter-btn:hover { border-color: #999; }
-        .color-bar {
+
+        /* Bottom panel: legend + school list */
+        #bottom-panel {
             position: fixed; bottom: 0; left: 0; right: 0;
-            background: rgba(255,255,255,0.95); padding: 4px 12px;
-            display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center;
-            font-size: 10px; color: #555; z-index: 1000;
-            border-top: 1px solid #ddd; box-shadow: 0 -1px 4px rgba(0,0,0,0.1);
+            background: rgba(255,255,255,0.97);
+            z-index: 1000;
+            border-top: 1px solid #ddd;
+            box-shadow: 0 -1px 4px rgba(0,0,0,0.1);
+            max-height: 90px;
+            overflow-y: auto;
         }
-        .color-bar-item { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
-        .color-bar-dot { width: 9px; height: 9px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.25); flex-shrink: 0; }
+        .legend-row {
+            display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center;
+            padding: 4px 12px 2px;
+            font-size: 9px; color: #888;
+            border-bottom: 1px solid #eee;
+        }
+        .legend-item { display: flex; align-items: center; gap: 3px; white-space: nowrap; }
+        .legend-dot { width: 8px; height: 8px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.2); flex-shrink: 0; }
+        #school-list {
+            display: flex; flex-wrap: wrap; gap: 2px 10px;
+            padding: 3px 12px 5px;
+            font-size: 10px;
+        }
+        .school-item {
+            display: flex; align-items: center; gap: 3px;
+            white-space: nowrap; color: #444;
+            cursor: pointer;
+            padding: 1px 2px;
+            border-radius: 3px;
+            transition: background 0.1s;
+        }
+        .school-item:hover { background: #f0f0f0; }
+        .school-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            flex-shrink: 0; border: 1px solid rgba(0,0,0,0.2);
+        }
+        .school-item.top80 { font-weight: 600; }
+        .school-count { font-size: 9px; color: #aaa; margin-right: 4px; }
+
         .popup-content h3 { font-size: 14px; margin-bottom: 4px; color: #222; }
         .popup-content p { font-size: 12px; margin: 2px 0; color: #555; }
         .popup-content .oxbridge { color: #d35400; font-weight: 600; }
         .popup-content .fee { font-weight: 600; color: #8e44ad; }
         .popup-content .entry { color: #2980b9; font-style: italic; }
+
+        /* Info panel */
+        #info-panel {
+            position: fixed; top: 10px; right: 10px;
+            background: white; border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+            z-index: 1000; width: 320px;
+            font-size: 12px; color: #333;
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+        #info-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px 12px; cursor: pointer; user-select: none;
+            border-bottom: 1px solid #eee;
+        }
+        #info-header h4 { margin: 0; font-size: 13px; }
+        #info-toggle {
+            background: #eee; border: none; border-radius: 4px;
+            padding: 2px 8px; font-size: 14px; cursor: pointer; color: #555;
+        }
+        #info-body { padding: 10px 12px 12px; display: none; }
+        #info-panel.open #info-body { display: block; }
+        #info-body h5 { font-size: 12px; margin: 10px 0 4px; color: #555; text-transform: uppercase; letter-spacing: 0.3px; }
+        #info-body h5:first-child { margin-top: 0; }
+        #info-body p, #info-body li { font-size: 11px; line-height: 1.45; color: #444; margin: 2px 0; }
+        #info-body ul { padding-left: 16px; margin: 2px 0 6px; }
+        .info-color { display: inline-block; width: 9px; height: 9px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.2); vertical-align: middle; margin-right: 3px; }
+        .info-src { font-size: 10px; color: #999; margin-top: 8px; border-top: 1px solid #eee; padding-top: 6px; }
     </style>
 </head>
 <body>
     <div id="map"></div>
+    <div id="info-panel">
+        <div id="info-header">
+            <h4>ℹ️ About the data</h4>
+            <button id="info-toggle">+</button>
+        </div>
+        <div id="info-body">
+            <h5>School types</h5>
+            <ul>
+                <li><span class="info-color" style="background:#2ecc40"></span><strong>Grammar</strong> — fully selective state schools. Entry by 11+ exam only. Free. London has 19, all shown (per Education Act 1998 Statutory Instrument).</li>
+                <li><span class="info-color" style="background:#0074d9"></span><strong>State (Top 80)</strong> — comprehensive schools that made the Oxbridge Top 80 list. Formally non-selective, but often use faith criteria, banding, or interviews that effectively select.</li>
+                <li><span class="info-color" style="background:#ff851b"></span><strong>Partially selective</strong> — state schools that select 10–33% of intake by ability or aptitude (music, art, languages, sport, general ability). The rest admitted by distance/faith. Free. Source: Wikipedia's statutory list + known aptitude selectors.</li>
+                <li><span class="info-color" style="background:rgb(200,150,220)"></span><strong>Independent</strong> — private fee-paying schools. Colour intensity = fee level (£28k–£64k/year).</li>
+            </ul>
+
+            <h5>Oxbridge Top 80</h5>
+            <p>Schools ranked by number of offers from Oxford + Cambridge (most recent published data). Larger dots = in the Top 80. Rank, offer count, and percentage shown in popup.</p>
+
+            <h5>Completeness</h5>
+            <ul>
+                <li><strong>Grammar:</strong> Complete — all 19 London grammar schools per statutory list.</li>
+                <li><strong>Partially selective:</strong> All schools from the Wikipedia statutory list (pre-1997 arrangements preserved by law) + well-known aptitude selectors. Not every academy with a 10% aptitude band is listed — there are dozens more.</li>
+                <li><strong>State (non-selective):</strong> Only those that made the Oxbridge Top 80.</li>
+                <li><strong>Independent:</strong> Only those in the Oxbridge Top 80. Many more independent schools exist in London.</li>
+            </ul>
+
+            <h5>Entry points</h5>
+            <p>11+ = Year 7 entry (age 10–11). 13+ = Year 9 entry. 16+ = Sixth Form entry. Some single-sex schools open to both genders at 16+.</p>
+
+            <p class="info-src">Sources: Education (Grammar School Designation) Order 1998; Wikipedia "List of grammar schools in England" &amp; "Partially selective school (England)"; Oxbridge Top 80 league tables.</p>
+        </div>
+    </div>
+    <div id="bottom-panel">
+        <div class="legend-row">
+            <span class="legend-item"><span class="legend-dot" style="background:#2ecc40"></span>Grammar (T80)</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#a3d977"></span>Grammar</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#ff851b"></span>Semi-sel. (T80)</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#ffc04d"></span>Semi-sel.</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#0074d9"></span>Non-selective</span>
+            <span class="legend-item"><span class="legend-dot" style="background:rgb(200,150,220)"></span>Independent <span style="color:rgb(200,150,220)">£28k</span>–<span style="color:rgb(120,30,180)">£64k</span></span>
+            <span class="legend-item" style="color:#aaa">● larger = Top 80</span>
+        </div>
+        <div id="school-list"></div>
+    </div>
     <script>
         const map = L.map('map').setView([51.48, -0.10], 11);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -66,7 +168,6 @@
             maxZoom: 18
         }).addTo(map);
 
-        // All schools data
         const schools = [
             // === GRAMMAR - TOP 80 ===
             { name: "Queen Elizabeth's School, Barnet", type: "grammar", gender: "boys", top80: true, free: true, entry: "11+", rank: 9, offers: 47, pct: "44%", lat: 51.6525, lng: -0.1985 },
@@ -109,20 +210,29 @@
             { name: "Nonsuch High School for Girls", type: "grammar", gender: "girls", top80: false, free: true, entry: "11+, 16+", lat: 51.3554, lng: -0.2239 },
             { name: "Wallington High School for Girls", type: "grammar", gender: "girls", top80: false, free: true, entry: "11+, 16+", lat: 51.348, lng: -0.1488 },
             { name: "Woodford County High School", type: "grammar", gender: "girls", top80: false, free: true, entry: "11+, 16+", lat: 51.607, lng: 0.0185 },
-            // Boys grammar not in top 80
             { name: "Beths Grammar School", type: "grammar", gender: "boys", top80: false, free: true, entry: "11+, 16+", lat: 51.4410, lng: 0.1490 },
             { name: "Chislehurst & Sidcup Grammar", type: "grammar", gender: "coed", top80: false, free: true, entry: "11+, 16+", lat: 51.4210, lng: 0.0710 },
             { name: "Ilford County High School", type: "grammar", gender: "boys", top80: false, free: true, entry: "11+, 16+", lat: 51.5790, lng: 0.0580 },
             { name: "Wallington County Grammar School", type: "grammar", gender: "boys", top80: false, free: true, entry: "11+, 16+", lat: 51.3590, lng: -0.1530 },
             // === PARTIALLY-SELECTIVE - NOT TOP 80 ===
-            { name: "Graveney School", type: "partial", gender: "coed", top80: false, free: true, entry: "11+, 16+", lat: 51.4235, lng: -0.151, note: "25% general ability" },
+            { name: "Graveney School", type: "partial", gender: "coed", top80: false, free: true, entry: "11+, 16+", lat: 51.4235, lng: -0.151, note: "~25% by ability" },
             { name: "Grey Coat Hospital", type: "partial", gender: "girls", top80: false, free: true, entry: "11+, 16+", lat: 51.498, lng: -0.132, note: "Language aptitude, co-ed 6th" },
-            { name: "Burntwood School", type: "partial", gender: "girls", top80: false, free: true, entry: "11+", lat: 51.438, lng: -0.180, note: "25% general ability" },
+            { name: "Burntwood School", type: "partial", gender: "girls", top80: false, free: true, entry: "11+", lat: 51.438, lng: -0.180, note: "~25% by ability" },
             { name: "Kingsdale Foundation School", type: "partial", gender: "coed", top80: false, free: true, entry: "11+", lat: 51.4321, lng: -0.0846, note: "10% arts, 10% PE, 10% music" },
-            { name: "Greenshaw High School", type: "partial", gender: "coed", top80: false, free: true, entry: "11+", lat: 51.362, lng: -0.177, note: "24% general ability" },
+            { name: "Greenshaw High School", type: "partial", gender: "coed", top80: false, free: true, entry: "11+", lat: 51.362, lng: -0.177, note: "~24% by ability" },
             { name: "Mill Hill County High School", type: "partial", gender: "coed", top80: false, free: true, entry: "11+", lat: 51.630, lng: -0.249, note: "10% tech, 10% music, 5% dance" },
             { name: "Chestnut Grove School", type: "partial", gender: "coed", top80: false, free: true, entry: "11+", lat: 51.444, lng: -0.155, note: "18% art, 18% languages" },
-            { name: "Riddlesdown Collegiate", type: "partial", gender: "coed", top80: false, free: true, entry: "11+", lat: 51.326, lng: -0.088, note: "15% general ability" },
+            { name: "Riddlesdown Collegiate", type: "partial", gender: "coed", top80: false, free: true, entry: "11+", lat: 51.326, lng: -0.088, note: "~15% by ability" },
+            { name: "Dunraven School", type: "partial", gender: "coed", top80: false, free: true, entry: "11+", lat: 51.441, lng: -0.119, note: "10% performing arts" },
+            { name: "Prendergast Ladywell School", type: "partial", gender: "girls", top80: false, free: true, entry: "11+", lat: 51.458, lng: -0.021, note: "10% music aptitude" },
+            { name: "Lady Margaret School", type: "partial", gender: "girls", top80: false, free: true, entry: "11+", lat: 51.483, lng: -0.210, note: "10% music aptitude, CofE" },
+            // === PARTIALLY-SELECTIVE — STATUTORY (pre-1997, Wikipedia verified) ===
+            { name: "Ernest Bevin Academy", type: "partial", gender: "boys", top80: false, free: true, entry: "11+", lat: 51.438, lng: -0.168, note: "⅓ general ability, co-ed 6th" },
+            { name: "Archbishop Lanfranc Academy", type: "partial", gender: "coed", top80: false, free: true, entry: "11+", lat: 51.391, lng: -0.130, note: "15% general ability" },
+            { name: "London Nautical School", type: "partial", gender: "boys", top80: false, free: true, entry: "11+", lat: 51.507, lng: -0.108, note: "Nautical/sport aptitude" },
+            { name: "Shirley High School", type: "partial", gender: "coed", top80: false, free: true, entry: "11+", lat: 51.370, lng: -0.049, note: "15% general ability" },
+            { name: "Orchard Park High (ex-Edenham)", type: "partial", gender: "coed", top80: false, free: true, entry: "11+", lat: 51.384, lng: -0.039, note: "15% general ability" },
+            { name: "Archbishop Tenison's School", type: "partial", gender: "boys", top80: false, free: true, entry: "11+", lat: 51.483, lng: -0.116, note: "Weighted banding" },
         ];
 
         // Color logic
@@ -142,23 +252,31 @@
             return '#999';
         }
 
-        // Marker layer
+        // Marker storage — index → marker
+        let markerMap = {};
         let markers = [];
-        function renderMarkers() {
-            markers.forEach(m => map.removeLayer(m));
-            markers = [];
 
+        function getVisibleSchools() {
             const genderFilter = getActiveFilters('gender');
             const typeFilter = getActiveFilters('type');
             const top80Only = document.getElementById('f-top80').classList.contains('active');
             const freeOnly = document.getElementById('f-free').classList.contains('active');
+            return schools.map((s, i) => ({ ...s, _idx: i })).filter(s => {
+                if (!genderFilter.includes(s.gender)) return false;
+                if (!typeFilter.includes(s.type)) return false;
+                if (top80Only && !s.top80) return false;
+                if (freeOnly && !s.free) return false;
+                return true;
+            });
+        }
 
-            schools.forEach(s => {
-                if (!genderFilter.includes(s.gender)) return;
-                if (!typeFilter.includes(s.type)) return;
-                if (top80Only && !s.top80) return;
-                if (freeOnly && !s.free) return;
+        function renderMarkers() {
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+            markerMap = {};
 
+            const visible = getVisibleSchools();
+            visible.forEach(s => {
                 const color = getColor(s);
                 const radius = s.top80 ? 11 : 9;
                 const marker = L.circleMarker([s.lat, s.lng], {
@@ -174,7 +292,48 @@
                 html += `</div>`;
                 marker.bindPopup(html);
                 markers.push(marker);
+                markerMap[s._idx] = marker;
             });
+        }
+
+        function renderSchoolList() {
+            const container = document.getElementById('school-list');
+            const visible = getVisibleSchools();
+            // Sort: top80 first (by rank), then non-top80 alphabetically
+            visible.sort((a, b) => {
+                if (a.top80 && !b.top80) return -1;
+                if (!a.top80 && b.top80) return 1;
+                if (a.top80 && b.top80) return (a.rank || 999) - (b.rank || 999);
+                return a.name.localeCompare(b.name);
+            });
+
+            container.innerHTML = `<span class="school-count">${visible.length} schools</span>`;
+            visible.forEach(s => {
+                const item = document.createElement('span');
+                item.className = 'school-item' + (s.top80 ? ' top80' : '');
+                const dot = document.createElement('span');
+                dot.className = 'school-dot';
+                dot.style.background = getColor(s);
+                item.appendChild(dot);
+                // Short name
+                let label = s.name
+                    .replace(' School', '').replace(' Grammar', ' Gr.')
+                    .replace(' High School', '').replace(' for Girls', ' ♀')
+                    .replace(' for Boys', ' ♂').replace(', Croydon', '');
+                if (label.length > 28) label = label.substring(0, 26) + '…';
+                item.appendChild(document.createTextNode(label));
+                item.title = s.name + (s.rank ? ` (#${s.rank})` : '') + (s.fee ? ` £${s.fee.toLocaleString()}/yr` : '');
+                item.addEventListener('click', () => {
+                    const m = markerMap[s._idx];
+                    if (m) { map.setView([s.lat, s.lng], 14); m.openPopup(); }
+                });
+                container.appendChild(item);
+            });
+        }
+
+        function updateAll() {
+            renderMarkers();
+            renderSchoolList();
         }
 
         function getActiveFilters(group) {
@@ -191,7 +350,7 @@
                     <button class="toggle-btn" id="collapse-btn">−</button>
                 </div>
                 <div class="panel-body">
-                    <p class="panel-note">Selective schools in London only. Not a complete list — based on Oxbridge Top 80 + known grammar/partially-selective schools.</p>
+                    <p class="panel-note">Selective schools in London. Grammar: all 19 per Statutory Instrument. Partial: all from Wikipedia's verified statutory list + known aptitude selectors. Independent: Oxbridge Top 80.</p>
                     <div class="filter-group">
                         <div class="filter-group-title">Gender</div>
                         <div class="btn-row">
@@ -204,8 +363,8 @@
                         <div class="filter-group-title">School type</div>
                         <div class="btn-row">
                             <button class="filter-btn active" data-group="type" data-value="grammar" style="--c:#2ecc40;--bg:#d5f5e3;--tc:#1e8449;">Grammar</button>
-                            <button class="filter-btn active" data-group="type" data-value="state" style="--c:#0074d9;--bg:#d6eaf8;--tc:#1a5276;">State</button>
-                            <button class="filter-btn active" data-group="type" data-value="partial" style="--c:#ff851b;--bg:#fdebd0;--tc:#9c640c;">Partial</button>
+                            <button class="filter-btn active" data-group="type" data-value="partial" style="--c:#ff851b;--bg:#fdebd0;--tc:#9c640c;">Semi-selective</button>
+                            <button class="filter-btn active" data-group="type" data-value="state" style="--c:#0074d9;--bg:#d6eaf8;--tc:#1a5276;">Non-selective</button>
                             <button class="filter-btn active" data-group="type" data-value="independent" style="--c:#8e44ad;--bg:#f4ecf7;--tc:#6c3483;">Independent</button>
                         </div>
                     </div>
@@ -215,29 +374,22 @@
                             <button class="filter-btn" id="f-top80" style="--c:#d35400;--bg:#fdebd0;--tc:#9c640c;">Top 80 only</button>
                             <button class="filter-btn" id="f-free" style="--c:#27ae60;--bg:#d5f5e3;--tc:#1e8449;">Free only</button>
                         </div>
-                </div>
+                    </div>
                 </div>
             `;
 
-            // Collapse
             div.querySelector('#collapse-btn').addEventListener('click', () => {
                 div.classList.toggle('collapsed');
                 div.querySelector('#collapse-btn').textContent = div.classList.contains('collapsed') ? '+' : '−';
             });
 
-            // Multi-select toggle buttons
             div.querySelectorAll('.filter-btn[data-group]').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    btn.classList.toggle('active');
-                    renderMarkers();
-                });
+                btn.addEventListener('click', () => { btn.classList.toggle('active'); updateAll(); });
             });
 
-            // Single toggle for top80/free
             ['f-top80', 'f-free'].forEach(id => {
                 div.querySelector('#' + id).addEventListener('click', function() {
-                    this.classList.toggle('active');
-                    renderMarkers();
+                    this.classList.toggle('active'); updateAll();
                 });
             });
 
@@ -247,24 +399,17 @@
         };
         panel.addTo(map);
 
+        // Info panel toggle
+        document.getElementById('info-header').addEventListener('click', () => {
+            const panel = document.getElementById('info-panel');
+            panel.classList.toggle('open');
+            document.getElementById('info-toggle').textContent = panel.classList.contains('open') ? '−' : '+';
+        });
+
         // Initial render
-        renderMarkers();
+        updateAll();
         const allCoords = schools.map(s => [s.lat, s.lng]);
         map.fitBounds(allCoords, { padding: [30, 30] });
-
-        // Fixed color bar at bottom
-        const bar = document.createElement('div');
-        bar.className = 'color-bar';
-        bar.innerHTML = `
-            <span class="color-bar-item"><span class="color-bar-dot" style="background:#2ecc40"></span>Grammar (Top 80)</span>
-            <span class="color-bar-item"><span class="color-bar-dot" style="background:#a3d977"></span>Grammar</span>
-            <span class="color-bar-item"><span class="color-bar-dot" style="background:#0074d9"></span>State</span>
-            <span class="color-bar-item"><span class="color-bar-dot" style="background:#ff851b"></span>Partial (Top 80)</span>
-            <span class="color-bar-item"><span class="color-bar-dot" style="background:#ffc04d"></span>Partial</span>
-            <span class="color-bar-item"><span class="color-bar-dot" style="background:rgb(200,150,220)"></span>Independent <span style="color:rgb(200,150,220)">£28k</span>–<span style="color:rgb(120,30,180)">£64k</span></span>
-            <span class="color-bar-item" style="color:#999">● Top 80 = larger</span>
-        `;
-        document.body.appendChild(bar);
     </script>
 </body>
 </html>
