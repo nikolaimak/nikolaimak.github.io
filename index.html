@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nikolai Maksimov — Projects</title>
+    <meta name="description" content="Small web projects by Nikolai Maksimov, all open source and hosted on GitHub Pages." />
+    <meta name="theme-color" content="#f7f4ec" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#14151a" media="(prefers-color-scheme: dark)" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Nikolai Maksimov — Projects" />
+    <meta property="og:description" content="Small web projects, all open source and hosted on GitHub Pages." />
+    <meta property="og:url" content="https://nikolaimak.github.io/" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23191a1f'/><text x='16' y='23' font-size='19' font-family='system-ui,sans-serif' font-weight='700' text-anchor='middle' fill='%23f7f4ec'>N</text></svg>"
+    />
+
+    <style>
+      :root {
+        --bg: #f7f4ec;
+        --bg-soft: #fffdf8;
+        --fg: #1b1c21;
+        --muted: #5f6270;
+        --line: #ddd7c7;
+        --accent: #b4531f;
+        --ring: #b4531f;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #14151a;
+          --bg-soft: #1e2027;
+          --fg: #eceadf;
+          --muted: #a1a5b4;
+          --line: #2f323c;
+          --accent: #f0a06a;
+          --ring: #f0a06a;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 0 20px 72px;
+        background: var(--bg);
+        color: var(--fg);
+        font: 16px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .wrap {
+        max-width: 780px;
+        margin: 0 auto;
+      }
+
+      header {
+        padding: 72px 0 40px;
+        border-bottom: 1px solid var(--line);
+        margin-bottom: 40px;
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: clamp(30px, 6vw, 42px);
+        letter-spacing: -0.02em;
+      }
+
+      .tagline {
+        margin: 0 0 18px;
+        color: var(--muted);
+        font-size: 17px;
+        max-width: 52ch;
+      }
+
+      .links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 18px;
+        font-size: 15px;
+      }
+
+      a {
+        color: var(--accent);
+        text-decoration-thickness: 1px;
+        text-underline-offset: 3px;
+      }
+
+      a:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 3px;
+        border-radius: 4px;
+      }
+
+      h2.section {
+        font-size: 13px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin: 0 0 18px;
+        font-weight: 600;
+      }
+
+      ul.projects {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 14px;
+      }
+
+      .card {
+        position: relative;
+        display: grid;
+        grid-template-columns: 46px 1fr;
+        gap: 4px 16px;
+        padding: 20px 22px;
+        background: var(--bg-soft);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        transition: transform 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
+      }
+
+      .card:hover {
+        transform: translateY(-2px);
+        border-color: var(--accent);
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.07);
+      }
+
+      .icon {
+        grid-row: span 2;
+        font-size: 34px;
+        line-height: 1.2;
+        text-align: center;
+      }
+
+      .card h3 {
+        margin: 0;
+        font-size: 19px;
+        letter-spacing: -0.01em;
+      }
+
+      /* the title link covers the whole card, so anywhere is clickable */
+      .card h3 a::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 14px;
+      }
+
+      .card h3 a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .card:hover h3 a {
+        color: var(--accent);
+      }
+
+      .card p {
+        margin: 4px 0 10px;
+        color: var(--muted);
+        font-size: 15px;
+      }
+
+      /* sits above the card-wide link so it stays separately clickable */
+      .repo {
+        position: relative;
+        z-index: 1;
+        justify-self: start;
+        font-size: 13.5px;
+        color: var(--muted);
+        text-decoration: none;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 3px 11px;
+      }
+
+      .repo:hover {
+        color: var(--fg);
+        border-color: var(--accent);
+      }
+
+      footer {
+        margin-top: 52px;
+        padding-top: 22px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      @media (max-width: 520px) {
+        header {
+          padding: 48px 0 32px;
+        }
+
+        .card {
+          grid-template-columns: 1fr;
+          padding: 18px;
+        }
+
+        .icon {
+          grid-row: auto;
+          text-align: left;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .card {
+          transition: none;
+        }
+
+        .card:hover {
+          transform: none;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="wrap">
+      <header>
+        <h1>Nikolai Maksimov</h1>
+        <p class="tagline">
+          Small web things I build. Every one of them is open source and runs as a static site right
+          here on GitHub Pages — no servers, no sign-ups.
+        </p>
+        <nav class="links">
+          <a href="https://github.com/nikolaimak">GitHub profile</a>
+        </nav>
+      </header>
+
+      <main>
+        <h2 class="section">Projects</h2>
+
+        <!--
+          TO ADD A PROJECT: copy one <li class="card"> … </li> block below and change
+          the five bits — the emoji, the title, the https://nikolaimak.github.io/<repo>/
+          link, the description, and the source link. Nothing else to build or run:
+          committing this file to the main branch publishes it.
+        -->
+        <ul class="projects">
+          <li class="card">
+            <span class="icon" aria-hidden="true">👗</span>
+            <h3><a href="https://nikolaimak.github.io/dressing-game/">The Dressing Game</a></h3>
+            <p>
+              Dress a lady and a gentleman in hand-drawn marker clothes, paint every piece any
+              colour, then decorate the room they are standing in.
+            </p>
+            <a class="repo" href="https://github.com/nikolaimak/dressing-game">Source</a>
+          </li>
+
+          <li class="card">
+            <span class="icon" aria-hidden="true">🦄</span>
+            <h3><a href="https://nikolaimak.github.io/math-lessons/">Subtraction Magic</a></h3>
+            <p>
+              Two-digit subtraction taught one step at a time with the place-value exchange method.
+            </p>
+            <a class="repo" href="https://github.com/nikolaimak/math-lessons">Source</a>
+          </li>
+
+          <li class="card">
+            <span class="icon" aria-hidden="true">📚</span>
+            <h3><a href="https://nikolaimak.github.io/os-taxonomy/">Micro Lessons</a></h3>
+            <p>
+              Primary-school micro-lessons following the UK National Curriculum: 1,590 topics in
+              learning order, with quizzes and progress kept in your browser.
+            </p>
+            <a class="repo" href="https://github.com/nikolaimak/os-taxonomy">Source</a>
+          </li>
+
+          <li class="card">
+            <span class="icon" aria-hidden="true">🗺️</span>
+            <h3><a href="https://nikolaimak.github.io/london-schools/">London Selective Schools</a></h3>
+            <p>
+              An interactive map of selective schools in London, with Oxbridge admissions data,
+              house prices and TfL commute times.
+            </p>
+            <a class="repo" href="https://github.com/nikolaimak/london-schools">Source</a>
+          </li>
+
+          <li class="card">
+            <span class="icon" aria-hidden="true">📰</span>
+            <h3><a href="https://nikolaimak.github.io/feed-digest/">Feed Digest</a></h3>
+            <p>A daily digest of an X/Twitter feed, generated automatically into plain HTML pages.</p>
+            <a class="repo" href="https://github.com/nikolaimak/feed-digest">Source</a>
+          </li>
+        </ul>
+      </main>
+
+      <footer>
+        Built as a single static <code>index.html</code> in
+        <a href="https://github.com/nikolaimak/nikolaimak.github.io">nikolaimak.github.io</a>.
+      </footer>
+    </div>
+  </body>
+</html>
